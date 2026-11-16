@@ -101,9 +101,10 @@ body.wide #side{width:380px;display:flex;flex-direction:column;justify-content:f
 #ihud,#xhair,#cmpwrap,#tinfo,#lockhint{display:none}
 body.imm #app{display:block;padding:0}
 body.imm #view{position:fixed;inset:0;max-height:none;border:none;flex:none}
-body.imm #side{display:block;position:fixed;inset:0;width:auto;pointer-events:none;background:none;box-shadow:none;border:none;z-index:3}
+body.imm #side{display:block;position:fixed;inset:0;width:auto;pointer-events:none;background:none;box-shadow:none;border:none;z-index:3;zoom:1}
+body.imm.touch #controls{zoom:var(--ui,1)}
 body.imm #hud,body.imm #mapwrap,body.imm #logjump{display:none!important}
-body.imm #log{position:absolute;left:14px;top:12px;width:min(48vw,440px);min-height:0;max-height:none;padding:0;background:none;box-shadow:none;border:none;overflow:hidden;pointer-events:none;font-size:20px;line-height:1.05em;text-shadow:2px 2px 0 #000,-1px -1px 0 #000}
+body.imm #log{position:absolute;left:14px;top:12px;width:min(48vw,calc(440px*var(--u,1)));min-height:0;max-height:none;padding:0;background:none;box-shadow:none;border:none;overflow:hidden;pointer-events:none;font-size:calc(18px*var(--u,1));line-height:1.05em;text-shadow:2px 2px 0 #000,-1px -1px 0 #000}
 body.imm #log div{display:none;opacity:.92;transition:opacity 1.2s}
 body.imm #log div:nth-last-of-type(-n+6){display:block}
 body.imm #log div.old{opacity:0}
@@ -112,34 +113,42 @@ body.imm #controls>*{pointer-events:auto}
 body.imm .acts button{opacity:.88}
 body.imm:not(.touch) #controls,body.imm:not(.touch) #sneakbtn{display:none}
 body.imm #sneakbtn{left:auto;right:12px;bottom:158px}
-body.imm.touch #sneakbtn{bottom:auto;top:96px}
-body.imm.touch #log{top:44px;width:calc(100vw - 100px)}
+body.imm.touch #sneakbtn{bottom:auto;top:96px;zoom:1}
+body.imm.touch #log{top:44px;width:calc(100vw - 100px);font-size:20px}
 body.imm.touch #tinfo{top:44px}
-body.imm #ihud{display:flex;position:absolute;left:50%;bottom:14px;transform:translateX(-50%);flex-direction:column;align-items:center;gap:4px;pointer-events:none;font-family:var(--px);font-size:10px;text-shadow:1px 1px 0 #000;zoom:var(--ui,1)}
+body.imm #ihud{display:flex;position:absolute;left:0;right:0;bottom:calc(12px*var(--u,1));flex-direction:column;align-items:center;gap:calc(4px*var(--u,1));pointer-events:none;font-family:var(--px);font-size:calc(10px*var(--u,1));text-shadow:1px 1px 0 #000}
 body.imm.touch #ihud{bottom:150px}
-#ibars{display:flex;align-items:center;gap:6px}
-#ibars .bar{width:150px;height:14px;margin:0}
-#ibars .bar span{position:absolute;inset:0;text-align:center;font-size:10px;line-height:11px;color:#fff}
+#ibars{display:flex;align-items:center;gap:calc(6px*var(--u,1))}
+#ibars .bar{width:calc(150px*var(--u,1));height:calc(14px*var(--u,1));margin:0;border-width:calc(2px*var(--u,1))}
+#ibars .bar span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:calc(10px*var(--u,1));color:#fff}
 #imp>i{background:#3a6ad8;box-shadow:inset 0 2px 0 #7aa0f0,inset 0 -2px 0 #1c3a88}
-#ilv{color:#b8f080;min-width:22px;text-align:center}
-#ixp{width:318px;height:5px;background:#120c08;border:1px solid #000}#ixp>i{display:block;height:100%;width:0;background:#d8a830}
-#hotbar{display:flex;gap:2px;pointer-events:auto}
-#hotbar .hs{width:44px;height:44px;min-height:0;background:rgba(18,12,8,.74);border:2px solid #000;box-shadow:inset 2px 2px 0 rgba(255,255,255,.1),inset -2px -2px 0 rgba(0,0,0,.4);position:relative;padding:0}
+#ilv{color:#b8f080;min-width:calc(22px*var(--u,1));text-align:center}
+#ixp{width:calc(318px*var(--u,1));height:calc(5px*var(--u,1));background:#120c08;border:1px solid #000}#ixp>i{display:block;height:100%;width:0;background:#d8a830}
+#irow{display:flex;align-items:flex-start;gap:calc(10px*var(--u,1))}
+#hotbar{display:flex;gap:calc(2px*var(--u,1));pointer-events:auto}
+#hotbar .hs,.hand .hb{width:calc(44px*var(--u,1));height:calc(44px*var(--u,1));min-height:0;background:rgba(18,12,8,.74);border:calc(2px*var(--u,1)) solid #000;box-shadow:inset 2px 2px 0 rgba(255,255,255,.1),inset -2px -2px 0 rgba(0,0,0,.4);position:relative;padding:0}
 #hotbar .hs.sel{border-color:#ffd36a;box-shadow:0 0 0 2px #ffd36a}
-#hotbar .hs.wpn{border-color:#a04030}
-#hotbar .hs img{width:32px;height:32px;image-rendering:pixelated}
-#hotbar .hs .n{position:absolute;right:2px;bottom:1px;color:#fff;font-size:10px;text-shadow:1px 1px 0 #000}
-#hotbar .hs .k{position:absolute;left:3px;top:2px;color:#a89878;font-size:10px;text-shadow:1px 1px 0 #000}
+#hotbar .hs img,.hand img{width:calc(32px*var(--u,1));height:calc(32px*var(--u,1));image-rendering:pixelated}
+#hotbar .hs .n,.hand .n{position:absolute;right:calc(2px*var(--u,1));bottom:calc(1px*var(--u,1));color:#fff;font-size:calc(10px*var(--u,1));text-shadow:1px 1px 0 #000}
+#hotbar .hs .k{position:absolute;left:calc(3px*var(--u,1));top:calc(2px*var(--u,1));color:#a89878;font-size:calc(10px*var(--u,1));text-shadow:1px 1px 0 #000}
 body.touch #hotbar .hs .k{display:none}
+body.touch .hand{width:66px}body.touch .hand .hb{width:44px;height:44px}body.touch .hand img{width:32px;height:32px}body.touch .hand .cap{white-space:normal;line-height:1.2;font-size:10px}
+body.touch #irow{gap:6px}
+.hand{display:flex;flex-direction:column;align-items:center;gap:calc(3px*var(--u,1));pointer-events:auto;width:calc(120px*var(--u,1))}
+.hand .hb{width:calc(52px*var(--u,1));height:calc(52px*var(--u,1))}
+.hand img{width:calc(38px*var(--u,1));height:calc(38px*var(--u,1))}
+#iwpn .hb{border-color:#7a2a20}#ispell .hb{border-color:#4a3a88}
+.hand .cap{font-size:calc(10px*var(--u,1));color:#e8dcc0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center}
+.hand .cap.dim{color:#8a7a68}
 body.imm #xhair{display:block;position:absolute;left:50%;top:50%;width:16px;height:16px;margin:-8px 0 0 -8px;pointer-events:none;opacity:.85}
 #xhair::before,#xhair::after{content:'';position:absolute;background:#fff;box-shadow:0 0 0 1px #000}
 #xhair::before{left:7px;top:0;width:2px;height:16px}#xhair::after{left:0;top:7px;width:16px;height:2px}
-body.imm #cmpwrap{display:block;position:absolute;left:50%;top:10px;transform:translateX(-50%);pointer-events:auto;zoom:var(--ui,1)}
-#cmp{display:block;width:300px;height:24px}
-body.imm #tinfo{display:block;position:absolute;right:14px;top:12px;font-family:var(--px);font-size:10px;text-align:right;line-height:1.6;text-shadow:1px 1px 0 #000;pointer-events:none;zoom:var(--ui,1)}
+body.imm #cmpwrap{display:flex;justify-content:center;position:absolute;left:0;right:0;top:calc(10px*var(--u,1));pointer-events:none}
+#cmp{display:block;width:calc(300px*var(--u,1));height:calc(24px*var(--u,1));pointer-events:auto;image-rendering:pixelated}
+body.imm #tinfo{display:block;position:absolute;right:14px;top:12px;font-family:var(--px);font-size:calc(10px*var(--u,1));text-align:right;line-height:1.6;text-shadow:1px 1px 0 #000;pointer-events:none}
 #tinfo b{color:var(--gold);font-weight:normal}
-body.imm #bossbar{top:44px;bottom:auto;width:min(60%,420px)}
-body.imm #lockhint.on{display:block;position:absolute;left:50%;top:58%;transform:translateX(-50%);font-family:var(--px);font-size:10px;color:#ffd36a;background:rgba(0,0,0,.65);padding:8px 14px;pointer-events:none;zoom:var(--ui,1)}
+body.imm #bossbar{top:calc(44px*var(--u,1));bottom:auto;width:min(60%,calc(420px*var(--u,1)));zoom:1;font-size:calc(10px*var(--u,1))}
+body.imm #lockhint.on{display:block;position:absolute;left:50%;top:58%;transform:translateX(-50%);font-family:var(--px);font-size:calc(10px*var(--u,1));color:#ffd36a;background:rgba(0,0,0,.65);padding:8px 14px;pointer-events:none}
 </style>
 </head>
 <body>
@@ -160,7 +169,7 @@ body.imm #lockhint.on{display:block;position:absolute;left:50%;top:58%;transform
     <div id="cmpwrap"><canvas id="cmp" width="300" height="24"></canvas></div>
     <div id="tinfo"></div>
     <div id="lockhint">CLICK TO PLAY</div>
-    <div id="ihud"><div id="ibars"><div class="bar" id="ihp"><i></i><span></span></div><span id="ilv">1</span><div class="bar" id="imp"><i></i><span></span></div></div><div id="ixp"><i></i></div><div id="hotbar"></div></div>
+    <div id="ihud"><div id="ibars"><div class="bar" id="ihp"><i></i><span></span></div><span id="ilv">1</span><div class="bar" id="imp"><i></i><span></span></div></div><div id="ixp"><i></i></div><div id="irow"><div class="hand" id="iwpn"></div><div id="hotbar"></div><div class="hand" id="ispell"></div></div></div>
   </div>
   <div id="side" class="panel">
     <div id="log" class="panel"></div>
@@ -960,7 +969,7 @@ function applyVideo(){
   document.body.classList.toggle('imm',SET.hud!=='classic');
   document.body.classList.toggle('touch',matchMedia('(pointer:coarse)').matches);
   if(typeof hbSig!=='undefined'){hbSig='';cmpA=null}if(G)hud();
-  document.documentElement.style.setProperty('--ui',uiScale());
+  document.documentElement.style.setProperty('--ui',uiScale());document.documentElement.style.setProperty('--u',uiScale());
   resize();
 }
 let BUS=null;
@@ -1299,7 +1308,7 @@ function hud(){
   updateMusic();
 }
 // Immersive HUD: bars, level, XP, gold/floor and the hotbar (rebuilt only when its contents change).
-function hotbarSlots(){const sl=[{k:'w'},{k:'pot'}];if(!G||!G.camp)for(const S of SPELLS)if(sk(S.s)>=S.req)sl.push({k:'sp',S});return sl.slice(0,9)}
+function hotbarSlots(){const sl=[{k:'pot'}];if(!G||!G.camp)for(const S of SPELLS)if(sk(S.s)>=S.req)sl.push({k:'sp',S});return sl.slice(0,9)}
 let hbSig='';
 function immHud(){
   const P=G.P,mh=maxHP(),mm=maxMP();
@@ -1309,11 +1318,14 @@ function immHud(){
   $('tinfo').innerHTML=`${G.camp?'CAMP':'FLOOR '+G.depth}<br><b>${G.camp?H.bank:P.gold} G</b>${H.pp?`<br><span class="good">PERK POINT${H.pp>1?'S':''}: ${H.pp}</span>`:''}${P.sneak?'<br><span class="info">SNEAKING</span>':''}`;
   const sl=hotbarSlots(),sig=JSON.stringify([gearIcon(H.weapon),H.weapon.ammo,H.potions,H.ready,P.mp,sl.map(x=>x.S?x.S.id:x.k)]);
   if(sig===hbSig)return;hbSig=sig;
+  const rs=SPELLS.find(x=>x.id===H.ready&&sk(x.s)>=x.req),wa=H.weapon.maxAmmo?(H.weapon.ammo??H.weapon.maxAmmo):'';
+  $('iwpn').innerHTML=`<button class="hb" data-cmd="hand" data-h="w"><img src="${gearIcon(H.weapon)}"><span class="n">${wa}</span></button><div class="cap">${gname(H.weapon)}</div>`;
+  $('ispell').innerHTML=rs?`<button class="hb" data-cmd="hand" data-h="s"><img src="${ICON['sp_'+rs.s].u}"><span class="n">${spellCost(rs)}</span></button><div class="cap" style="color:${rs.c}">${rs.n}</div>`
+    :`<button class="hb" data-cmd="hand" data-h="s"></button><div class="cap dim">NO SPELL</div>`;
   $('hotbar').innerHTML=sl.map((x,i)=>{let img,n='',cls='';
-    if(x.k==='w'){img=gearIcon(H.weapon);n=H.weapon.maxAmmo?(H.weapon.ammo??H.weapon.maxAmmo):'';cls='wpn'}
-    else if(x.k==='pot'){img=ICON.pot.u;n=H.potions}
+    if(x.k==='pot'){img=ICON.pot.u;n=H.potions}
     else{img=ICON['sp_'+x.S.s].u;n=spellCost(x.S);if(H.ready===x.S.id)cls='sel';if(P.mp<spellCost(x.S))cls+=' dim'}
-    return`<button class="hs ${cls}" data-cmd="hb" data-i="${i}" title="${x.k==='w'?gname(H.weapon):x.k==='pot'?'Healing potion':x.S.n}"><span class="k">${i+1}</span><img src="${img}"><span class="n">${n}</span></button>`}).join('')}
+    return`<button class="hs ${cls}" data-cmd="hb" data-i="${i}"><span class="k">${i+1}</span><img src="${img}"><span class="n">${n}</span></button>`}).join('')}
 function hotbarUse(i){const x=hotbarSlots()[i];if(!x||!G||!playing())return;audio();
   if(x.k==='pot')ACT.pot();
   else if(x.k==='sp'){if(H.ready===x.S.id)ACT.cast();else{H.ready=x.S.id;log(`${x.S.n} readied. Right-click or R to cast.`,'info');hud()}}}
@@ -1790,6 +1802,7 @@ document.addEventListener('click',e=>{
   if(c==='tocamp'){returnToCamp();return}
   if(c==='logjump'){const L=$('log');L.scrollTop=L.scrollHeight;return}
   if(c==='hb'){hotbarUse(+b.dataset.i);return}
+  if(c==='hand'){if(!G||!playing())return;if(b.dataset.h==='s'){if(SPELLS.some(x=>x.id===H.ready))ACT.cast();else openCast()}else openChar();return}
   if(c==='menu'){openMenu('main');return}
   if(c==='mtab'){if(b.dataset.t==='saves')Object.assign(SV,{mode:'list',code:'',msg:'',arm:false});openMenu(b.dataset.t);return}
   if(c==='sv'){saveCmd(b.dataset.op,+b.dataset.s);return}
@@ -2013,7 +2026,7 @@ function openMenu(tab){
   }else if(tab==='controls'){
     h=`<h2>CONTROLS</h2>`+optRow('Look sensitivity','Mouse, touch drag and controller look speed.',slider('look',25,300))+optRow('Invert up/down look','',cyc('invy',SET.invy?'ON':'OFF'))+`<div class="keys">
       <b>W A S D</b><span>Move and strafe</span><b>MOUSE</b><span>Look around (the cursor only appears in menus)</span><b>ARROWS</b><span>Move and turn</span>
-      <b>LEFT CLICK / SPACE</b><span>Attack (hold to keep swinging)</span><b>RIGHT CLICK / R</b><span>Cast readied spell</span><b>1-9 / WHEEL</b><span>Hotbar: potion, ready a spell</span><b>E</b><span>Use: open doors, talk, craft, take stairs (also F, ENTER)</span>
+      <b>LEFT CLICK / SPACE</b><span>Attack (hold to keep swinging)</span><b>RIGHT CLICK / R</b><span>Cast readied spell</span><b>1-9 / WHEEL</b><span>Hotbar: 1 drinks a potion, 2+ ready a spell (press again to cast)</span><b>E</b><span>Use: open doors, talk, craft, take stairs (also F, ENTER)</span>
       <b>R</b><span>Cast readied spell</span><b>X</b><span>Sneak</span><b>C</b><span>Pick up</span><b>H</b><span>Drink potion</span>
       <b>I</b><span>Pack</span><b>K</b><span>Character sheet</span><b>M</b><span>Map</span><b>L</b><span>Log</span><b>ESC / P</b><span>This menu</span></div>
       <p class="dim" style="font-size:18px;text-align:left">Touch: the stick moves you; drag the view to look around; tap the view or press ATTACK to strike; the USE button opens doors, talks and takes stairs.</p>`;

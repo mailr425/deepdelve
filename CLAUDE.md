@@ -69,7 +69,8 @@ Facing codes are 0=N, 1=E, 2=S, 3=W, with `DX=[0,1,0,-1]` and `DY=[-1,0,1,0]`.
   stations, the gate and stairs are used with USE (E key, B on a controller, the USE button, or tapping the
   view). A prompt like `[E] OPEN` shows in the view when something is usable (`useMode`).
 - HUD: `body.imm` (default, `SET.hud`) is the modern full-screen layout: compass strip (`drawCompass`), crosshair,
-  fading notifications (the `#log` restyled), bars + XP + hotbar (`immHud`, `hotbarSlots`, `hotbarUse`; keys 1-9,
+  fading notifications (the `#log` restyled), bars + XP, weapon box (left) and readied-spell box (right) around the
+  hotbar (`immHud`, `hotbarSlots`, `hotbarUse`; keys 1-9: 1 = potion, 2+ = spells;
   mouse wheel cycles spells, right-click casts). `body.touch` (coarse pointer) shows the stick and action buttons
   over the view; on PCs the cursor only exists in menus (`tryLock` re-captures the mouse after any click/key while
   playing). `SET.hud='classic'` restores the original panel layout.
