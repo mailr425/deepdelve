@@ -80,7 +80,8 @@ Facing codes are 0=N, 1=E, 2=S, 3=W, with `DX=[0,1,0,-1]` and `DY=[-1,0,1,0]`.
 
 ## Balance
 
-All difficulty lives in `BAL` (plus `RT.tick` and `weaponCD` for pacing). NOTE: the bot simulator below was
+All difficulty lives in `BAL` (plus `RT.tick` and `weaponCD` for pacing). For real time, `python test/playtest.py 120`
+runs a bot (`test/rtbot.js`) that explores and fights from floor 1. NOTE: the bot simulator below was
 written for the turn-based version (tag `turn-based-v16`) and needs updating for real time.
 To check a change, run the bot simulator:
 

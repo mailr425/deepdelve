@@ -1288,7 +1288,7 @@ function float(txt,c,big){FX.floats.push({txt,c,big:!!big,t:performance.now(),li
 let last=performance.now(),animF=0;
 const fxActive=now=>now-swingT<320||!!FX.bolt||!!FX.flash||now-FX.hurt<350||now-FX.fade<600||FX.floats.length>0||FX.ind.some(t=>now-t<700);
 function frame(now){
-  const dt=Math.min(.05,(now-last)/1000);last=now;
+  const dt=Math.min(.1,(now-last)/1000);last=now;
   if(G&&buf){
     const k=1-Math.exp(-dt*15),P=G.P;let moving=false;
     if(FX.parts.length){const keep=[];for(const q of FX.parts){q.vh-=6*dt;q.h+=q.vh*dt;q.x+=q.vx*dt;q.y+=q.vy*dt;q.vx*=.98;q.vy*=.98;
