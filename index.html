@@ -103,7 +103,11 @@ body.imm #app{display:block;padding:0}
 body.imm #view{position:fixed;inset:0;max-height:none;border:none;flex:none}
 body.imm #side{display:block;position:fixed;inset:0;width:auto;pointer-events:none;background:none;box-shadow:none;border:none;z-index:3;zoom:1}
 body.imm.touch #controls{zoom:var(--ui,1)}
-body.imm #hud,body.imm #mapwrap,body.imm #logjump{display:none!important}
+body.imm #hud,body.imm #logjump,body.imm #compass{display:none!important}
+body.imm:not(.mini) #mapwrap{display:none}
+body.imm #mapwrap{top:calc(64px*var(--u,1));right:14px;zoom:1}
+body.imm #mini{width:calc(116px*var(--u,1));height:calc(116px*var(--u,1));opacity:.9;margin:0}
+body.imm.touch #mapwrap{top:150px}
 body.imm #log{position:absolute;left:14px;top:12px;width:min(48vw,calc(440px*var(--u,1)));min-height:0;max-height:none;padding:0;background:none;box-shadow:none;border:none;overflow:hidden;pointer-events:none;font-size:calc(18px*var(--u,1));line-height:1.05em;text-shadow:2px 2px 0 #000,-1px -1px 0 #000}
 body.imm #log div{display:none;opacity:.92;transition:opacity 1.2s}
 body.imm #log div:nth-last-of-type(-n+6){display:block}
@@ -525,7 +529,7 @@ const spellCost=S=>{let c=S.s==='arcane'&&has('arcane_25')?Math.ceil(S.mp*.75):S
 
 
 // ================= BALANCE =================
-const BAL={mhp:.30,mdmg:1.1,mhit:.7,mhitd:.008,nM0:7,nMd:1,nMmax:22,hp0:26,hpLvl:6,bossHP:2.4,bossDmg:1.3,goldExp:1.1,xpFalloff:3,overE:.25,phit:.74,deepStart:10,deepHp:.2,deepDmg:1.5,deepHit:.015};
+const BAL={mhp:.30,mdmg:1.1,mhit:.7,mhitd:.008,nM0:7,nMd:1,nMmax:22,hp0:32,hpLvl:6,bossHP:2.4,bossDmg:1.3,goldExp:1.1,xpFalloff:3,overE:.25,phit:.74,deepStart:10,deepHp:.2,deepDmg:1.5,deepHit:.015};
 // ================= STATE =================
 let H=null,G=null;
 const newSkills=()=>{const o={};for(const k in SKILLS)o[k]={lv:5,xp:0};return o};
@@ -736,7 +740,19 @@ function gainGear(g){
 }
 function stash(g){if(!g||g.starter)return;H.bag.push(g);
   if(H.bag.length>BAG_MAX){H.bag.sort((a,c)=>sellVal(c)-sellVal(a));const x=H.bag.pop();log(`Pack full; you leave the ${x.n} behind.`)}}
-function lineMons(range){const P=G.P,out=[];for(let i=1;i<=range;i++){const x=P.x+DX[P.dir]*i,y=P.y+DY[P.dir]*i;if(solid(cell(x,y)))break;const m=monAt(x,y);if(m)out.push({m,d:i})}return out}
+// Ranged attacks and bolt spells fly where the crosshair points: monsters near the view ray, nearest first.
+function lineMons(range){const P=G.P,fx=Math.sin(P.a),fy=-Math.cos(P.a),out=[];
+  for(const m of G.mons){const mx=(m.px??m.x+.5)-P.px,my=(m.py??m.y+.5)-P.py,along=mx*fx+my*fy;if(along<=.15||along>range+.5)continue;
+    if(Math.abs(mx*fy-my*fx)>.45)continue;let blocked=false;
+    for(let t=.1;t<along-.2;t+=.1)if(solid(cell(Math.floor(P.px+fx*t),Math.floor(P.py+fy*t)))){blocked=true;break}
+    if(!blocked)out.push({m,d:along})}
+  return out.sort((a,b)=>a.d-b.d)}
+// Melee: the closest foe within reach that the crosshair is roughly pointing at.
+function meleeTarget(range=1.45){const P=G.P;let best=null,bs=1e9;
+  for(const m of G.mons){const dx=(m.px??m.x+.5)-P.px,dy=(m.py??m.y+.5)-P.py,dd=Math.hypot(dx,dy);if(dd>range)continue;
+    const df=Math.abs((((Math.atan2(dx,-dy)-P.a)%(2*Math.PI))+3*Math.PI)%(2*Math.PI)-Math.PI);if(df>1)continue;
+    const sc=dd+df*.8;if(sc<bs){bs=sc;best=m}}
+  return best}
 function hitCh(m,ranged){const M=MONS[m.t],wt=H.weapon.wt,W=wprop(H.weapon);
   return BAL.phit+H.lvl*.01+(disc()?.05:0)+W.hit+eff(wt)*.0025+eff(ranged?'ranged':'melee')*.0015+(ranged&&has('ranged_25')?.1:0)+(wt==='bow'&&has('bow_25')?.1:0)-(M.def+(m.boss?1:0)+(m.lv||0)*.3)*.04}
 function rollDmg(m,ranged,sneak){const wt=H.weapon.wt,W=wprop(H.weapon),M=MONS[m.t];
@@ -749,6 +765,7 @@ function rollDmg(m,ranged,sneak){const wt=H.weapon.wt,W=wprop(H.weapon),M=MONS[m
   if(crit)d*=2;d*=1+((curBuff()||{}).dmg||0);if(!ranged){if(isGi(H.armor))d*=1.08;if(disc())d*=1.15}return{d:Math.round(d)+affSum('flame'),crit}}
 function addSt(m,k,n){m.st=m.st||{};m.st[k]=Math.max(m.st[k]||0,n)}
 function damageMon(m,d,crit,quiet){
+  if(crit){HS=performance.now()+70;shake(2.5,160)}
   m.sleep=0;m.hp-=d;spray(m,3+Math.min(7,Math.round(d/2))+(crit?4:0),crit);m.hitT=performance.now();SFX.hit();float((crit?'CRIT ':'')+d,crit?'#ffd36a':'#ffffff');
   if(m.hp<=0){kill(m);return true}
   if(!quiet)log(`You hit the ${mname(m)} for ${d}${crit?' (critical!)':''}.`);return false}
@@ -773,10 +790,10 @@ function strike(m,ranged,mult=1){
 function attack(){
   if(G.camp){const m=useMode()[2];if(m==='npc'||m==='gate')return useAction();log('No need for weapons here.');return}
   const P=G.P,wt=H.weapon.wt,W=wprop(H.weapon),ranged=!!W.range;let targets=[];
-  if(wt==='thrown'&&!(H.weapon.ammo>0)){const m=monAt(P.x+DX[P.dir],P.y+DY[P.dir]);log(m?`Out of ${W.n.toLowerCase()}! You punch instead.`:`Out of ${W.n.toLowerCase()}. Go pick them up.`,'bad');
+  if(wt==='thrown'&&!(H.weapon.ammo>0)){const m=meleeTarget();log(m?`Out of ${W.n.toLowerCase()}! You punch instead.`:`Out of ${W.n.toLowerCase()}. Go pick them up.`,'bad');
     if(m){const d=ri(1,3)+dmgBonus();train('martial',.5);damageMon(m,d,false);m.awake=true}endTurn();return}
   if(ranged){const line=lineMons(W.range+(wt==='bow'&&has('bow_25')?2:0));if(line.length)targets=(wt==='bow'&&has('bow_50'))?line:[line[0]]}
-  else{const m=monAt(P.x+DX[P.dir],P.y+DY[P.dir]);if(m)targets=[{m,d:1}];else if(wt==='spear'&&has('spear_25')){const l=lineMons(2);if(l.length)targets=[l[0]]}}
+  else{const m=meleeTarget();if(m)targets=[{m,d:1}];else if(wt==='spear'&&has('spear_25')){const l=lineMons(2);if(l.length)targets=[l[0]]}}
   if(!targets.length){SFX.swing();log(ranged?'You loose a shot into the dark.':'You swing at empty air.');endTurn();return}
   if(ranged){FX.bolt={c:'#e8e0c8',sz:.08,t:performance.now(),d:targets[0].d};SFX.shoot()}
   if(wt==='thrown'){H.weapon.ammo--;const tm=targets[0].m;G.items.push(popItem({k:'ammo',v:H.weapon.var||'javelin',t:H.weapon.t||1,x:tm.x,y:tm.y},tm))}
@@ -786,8 +803,7 @@ function attack(){
   if(W.double&&Math.random()<W.double&&G.mons.includes(first)){log('Double strike!','good');strike(first,false)}
   if(ranged&&has('ranged_50')&&Math.random()<.2&&G.mons.includes(first)){log('Volley!','good');strike(first,true)}
   if(wt==='thrown'&&has('thrown_25')&&Math.random()<.3){const l=lineMons(W.range).filter(x=>x.m!==first);if(l.length){log('Ricochet!','good');strike(l[0].m,true)}}
-  if(wt==='axe'&&has('axe_50')){const tx=P.x+DX[P.dir],ty=P.y+DY[P.dir];
-    for(const s of[1,3]){const d=(P.dir+s)%4,c=monAt(tx+DX[d],ty+DY[d])||monAt(P.x+DX[d],P.y+DY[d]);if(c&&c!==first)strike(c,false,.5)}}
+  if(wt==='axe'&&has('axe_50')){for(const c of G.mons.slice())if(c!==first&&Math.hypot((c.px??c.x+.5)-P.px,(c.py??c.y+.5)-P.py)<1.6)strike(c,false,.5)}
   endTurn();
 }
 function heal(h){const P=G.P;h=Math.min(maxHP()-P.hp,h);P.hp+=h;float('+'+h+' HP','#9ee080');return h}
@@ -846,11 +862,11 @@ function useAction(){
   endTurn();
 }
 function tapView(){const P=G.P,W=wprop(H.weapon);if(G.camp){const m=useMode()[2];if(m==='npc'||m==='gate')useAction();return}
-  if(monAt(P.x+DX[P.dir],P.y+DY[P.dir])||(W.range&&lineMons(W.range).length)||(H.weapon.wt==='spear'&&has('spear_25')&&lineMons(2).length))return rtAttack();
+  if(meleeTarget()||(W.range&&lineMons(W.range).length)||(H.weapon.wt==='spear'&&has('spear_25')&&lineMons(2).length))return rtAttack();
   const m=useMode()[2];if(m==='open'||m==='down')useAction()}
 
 function kill(m){
-  const M=MONS[m.t];if(!G.mons.includes(m))return;G.mons.splice(G.mons.indexOf(m),1);
+  const M=MONS[m.t];if(!G.mons.includes(m))return;G.mons.splice(G.mons.indexOf(m),1);HS=performance.now()+(m.boss?160:95);shake(m.boss?6:3,200);
   {const P=G.P,front=m.awake||M.s==='rat'||(DX[m.f||0]*(P.x-m.x)+DY[m.f||0]*(P.y-m.y))>0,f=front&&!m.sleep?'':'_b';
    FX.deaths.push({x:m.vx??m.x,y:m.vy??m.y,tex:m.boss?bossTex(M.s,f):MONTEX[M.s][f],sz:Math.min(1.1,M.sz*(m.boss?1.3:1)),t:performance.now(),float:!!M.float,flip:M.s==='rat'&&(DX[m.f||0]*Math.cos(cam.a)+DY[m.f||0]*Math.sin(cam.a))>0,dur:m.boss?1100:700});
    if(!M.float){G.corpses=G.corpses||[];G.corpses.push({x:m.vx??m.x,y:m.vy??m.y,s:M.s,b:m.boss?1:0,f,fl:M.s==='rat'&&(DX[m.f||0]*Math.cos(cam.a)+DY[m.f||0]*Math.sin(cam.a))>0?1:0,t:Date.now()+(m.boss?1100:700)});
@@ -903,27 +919,14 @@ function monstersAct(){
       else m.lost=0;
     }
     if(st.stun>0){st.stun--;continue}
-    if(st.root>0){st.root--;if(di===1){monAttack(m);if(G.P.hp<=0)return}continue}
-    if(st.slow>0){st.slow--;if(G.turn%2)continue}
-    face(m,P.x,P.y);
-    if(di===1){monAttack(m);if(G.P.hp<=0)return;continue}
-    if(M.slow&&G.turn%2)continue;
-    if(di<0||di>16)continue;
-    let best=null;
-    for(let k=0;k<4;k++){const nx=m.x+DX[k],ny=m.y+DY[k],nd=d[idx(nx,ny)];
-      if(nd<0||nd>=di||monAt(nx,ny)||(nx===P.x&&ny===P.y))continue;
-      if(cell(nx,ny)===DOOR&&!M.opens)continue;
-      if(m.boss&&Math.abs(nx-m.hx)+Math.abs(ny-m.hy)>6)continue;
-      if(!best||nd<best.nd||(nd===best.nd&&Math.random()<.5))best={nx,ny,nd}}
-    if(!best)continue;
-    if(cell(best.nx,best.ny)===DOOR){G.map[idx(best.nx,best.ny)]=ODOOR;if(G.seen[idx(best.nx,best.ny)])log('You hear a door creak open...','bad')}
-    else{m.f=best.nx>m.x?1:best.nx<m.x?3:best.ny>m.y?2:0;m.x=best.nx;m.y=best.ny}
+    // Movement and attacks happen every frame in monUpdate; the tick only counts status effects down.
+    if(st.root>0)st.root--;
+    if(st.slow>0)st.slow--;
   }
 }
 function monAttack(m){
   const P=G.P,M=MONS[m.t];m.atkT=performance.now();
-  let k=0;for(;k<4;k++)if(m.x-P.x===DX[k]&&m.y-P.y===DY[k])break;
-  const rel=(k-P.dir+4)%4,side=['','from the right','from behind','from the left'][rel];
+  const ang=Math.atan2((m.px??m.x+.5)-P.px,-((m.py??m.y+.5)-P.py)),rel=Math.round(((((ang-P.a)%(2*Math.PI))+2*Math.PI)%(2*Math.PI))/(Math.PI/2))%4,side=['','from the right','from behind','from the left'][rel];
   train('dodge',.5);
   if(Math.random()<dodgeCh()){log(`You dodge the ${mname(m)}'s attack!`,'good');float('DODGE','#9cc4f0');
     if(has('dodge_50')&&rel===0&&Math.random()<.5){log('Counter!','good');strike(m,false)}return}
@@ -935,7 +938,7 @@ function monAttack(m){
     train(H.armor.at,1);
     if(P.ward>0){const ab=Math.min(P.ward,dmg);P.ward-=ab;dmg-=ab;if(ab)float('WARD -'+ab,'#ffe080');if(P.ward<=0)log('Your ward shatters.')}
     if(dmg>0&&has('cloth_50')&&H.armor.at==='cloth'){const ms=Math.min(P.mp,Math.round(dmg*.25));P.mp-=ms;dmg-=ms}
-    if(dmg>0){P.hp-=dmg;SFX.hurt();FX.hurt=performance.now();FX.ind[rel]=performance.now();
+    if(dmg>0){P.hp-=dmg;SFX.hurt();FX.hurt=performance.now();FX.ind[rel]=performance.now();shake(Math.min(7,2+dmg*.6),260);
       log(`The ${mname(m)} hits you${side?' '+side:''} for ${dmg}.`,'bad')}
     else log(`Your defenses absorb the ${mname(m)}'s blow.`,'good');
     if(has('nature_25')){m.hp-=2;if(m.hp<=0){log(`Thorns finish the ${mname(m)}.`,'good');kill(m)}}
@@ -961,7 +964,7 @@ const RES=[['retro','RETRO',120],['classic','CLASSIC',160],['sharp','SHARP',240]
 const RES_CAP=640*1000;   // max rendered pixels per frame (keeps big/4K screens smooth)
 const UIS=[[0,'AUTO'],[1,'100%'],[1.5,'150%'],[2,'200%']];
 const LAYOUTS=[['auto','AUTO'],['tall','PORTRAIT'],['wide','WIDE']];
-const SET={res:matchMedia('(pointer:coarse)').matches?'hd':'native',fsStart:1,hud:'imm',fov:.74,look:1,invy:0,bright:1,ui:0,layout:'auto',flash:1,master:.9,music:.7,sfx:.8};
+const SET={mini:1,res:matchMedia('(pointer:coarse)').matches?'hd':'native',fsStart:1,hud:'imm',fov:.74,look:1,invy:0,bright:1,ui:0,layout:'auto',flash:1,master:.9,music:.7,sfx:.8};
 try{Object.assign(SET,JSON.parse(localStorage.getItem(SET_KEY)||'{}'))}catch(e){}
 function saveSet(){try{localStorage.setItem(SET_KEY,JSON.stringify(SET))}catch(e){}}
 const uiScale=()=>SET.ui||(()=>{const k=Math.min(innerWidth/400,innerHeight/600);return k>=2?2:k>=1.5?1.5:1})();
@@ -969,6 +972,7 @@ function applyVideo(){
   const wide=SET.layout==='wide'||(SET.layout==='auto'&&innerWidth>innerHeight*1.15);
   document.body.classList.toggle('wide',wide);
   document.body.classList.toggle('imm',SET.hud!=='classic');
+  document.body.classList.toggle('mini',!!SET.mini);
   document.body.classList.toggle('touch',matchMedia('(pointer:coarse)').matches);
   if(typeof hbSig!=='undefined'){hbSig='';cmpA=null}if(G)hud();
   document.documentElement.style.setProperty('--ui',uiScale());document.documentElement.style.setProperty('--u',uiScale());
@@ -1234,13 +1238,13 @@ function render(now){
   if(G.corpses){const nowD=Date.now();for(const c of G.corpses){if(nowD<c.t)continue;const M=MONS.find(x=>x.s===c.s);if(!M)continue;const ct=corpseTex(c.s,!!c.b,c.f||'');
     spr.push({x:c.x+.5,y:c.y+.5,tex:ct.tex,sz:Math.min(1.1,M.sz*(c.b?1.3:1))*ct.k,wmul:ct.wm,lift:0,hp:1,flip:!!c.fl,corpse:1})}}
   let boss=null;
-  for(const m of G.mons){const M=MONS[m.t],lunge=m.atkT&&now-m.atkT<240?Math.sin((now-m.atkT)/240*Math.PI):0;
+  for(const m of G.mons){const M=MONS[m.t],lunge=m.wind?-.25*Math.min(1,(now-m.wT)/300):m.atkT&&now-m.atkT<240?Math.sin((now-m.atkT)/240*Math.PI):0;
     spr.push({x:m.vx+.5-fx*lunge*.25,y:m.vy+.5-fy*lunge*.25,tex:(f=>m.boss?bossTex(M.s,f):MONTEX[M.s][f])((()=>{const idl=m.sleep?0:((Math.floor(now/480)+m.x+m.y)&1),mf=m.f||0,front=!m.sleep&&(m.awake||M.s==='rat'||(DX[mf]*(P.x-m.x)+DY[mf]*(P.y-m.y))>0);
-      if(m.atkT&&now-m.atkT<320)return'_a';return front?(idl?'_i':''):(idl?'_bi':'_b')})()),flip:M.s==='rat'&&(DX[m.f||0]*rx+DY[m.f||0]*ry)>0,sz:Math.min(1.1,M.sz*(m.boss?1.3:1))*(1+lunge*.08),
-      flash:m.hitT&&now-m.hitT<160,lift:M.float?.1+Math.sin(now/400+m.x)*.03:0,hp:m.boss?1:m.hp/m.maxhp});
+      if(m.wind||(m.atkT&&now-m.atkT<320))return'_a';return front?(idl?'_i':''):(idl?'_bi':'_b')})()),flip:M.s==='rat'&&(DX[m.f||0]*rx+DY[m.f||0]*ry)>0,sz:Math.min(1.1,M.sz*(m.boss?1.3:1))*(1+lunge*.08),
+      flash:m.hitT&&now-m.hitT<160,warn:m.wind?Math.round(70+60*Math.sin((now-m.wT)/50)):0,lift:M.float?.1+Math.sin(now/400+m.x)*.03:0,hp:m.boss?1:m.hp/m.maxhp});
     if(m.sleep){const zl=Math.min(1.1,M.sz)+.04+((Math.floor(now/600)+m.x)&1)*.05;spr.push({x:m.vx+.5,y:m.vy+.5,tex:TEX.zz,sz:.13,lift:zl,hp:1})}}
   if(FX.bolt){const k=(now-FX.bolt.t)/180;if(k<1){const dd=.45+k*(FX.bolt.d-.45);
-    spr.push({x:P.x+.5+DX[P.dir]*dd,y:P.y+.5+DY[P.dir]*dd,tex:orbTex(FX.bolt.c),sz:FX.bolt.sz,lift:.42,hp:1,glow:1})}else FX.bolt=null}
+    spr.push({x:P.px+fx*dd,y:P.py+fy*dd,tex:orbTex(FX.bolt.c),sz:FX.bolt.sz,lift:.42,hp:1,glow:1})}else FX.bolt=null}
   for(const s of spr){const rxs=s.x-ex,rys=s.y-ey;s.dep=rxs*fx+rys*fy;s.lat=rxs*rx+rys*ry}
   spr.sort((a,b)=>b.dep-a.dep);
   for(const s of spr){
@@ -1252,6 +1256,7 @@ function render(now){
       if(s.dep>=zbuf[x])continue;let tx=(((x+.5-left)/wp)*t.w)|0;if(tx<0||tx>=t.w)continue;if(s.flip)tx=t.w-1-tx;
       for(let y=y0;y<=y1;y++){const ty=(((y+.5-top)/hp)*t.h)|0;if(ty<0||ty>=t.h)continue;
         let c=t.d[ty*t.w+tx];if(!c)continue;if(s.fade&&BAY[((y&3)<<2)|(x&3)]<s.fade)continue;
+        if(s.warn)c=((c&0xffffff00)|Math.min(255,(c&255)+s.warn))>>>0;
         if(s.flash)c=((255<<24)|((((c>>>16)&255)>>2)<<16)|((((c>>>8)&255)>>2)<<8)|Math.min(255,(c&255)+120))>>>0;
         buf[y*RW+x]=shp(c,s.dark?L*(1-.45*s.dark):L,x,y)}
     }
@@ -1260,7 +1265,9 @@ function render(now){
         buf[y*RW+x]=(x-bx0)/bw<s.hp?C(200,56,42):C(30,12,8)}}}
   }
   lctx.putImageData(img,0,0);
-  ctx.imageSmoothingEnabled=false;ctx.drawImage(lo,0,0,VW,VH);
+  ctx.imageSmoothingEnabled=false;
+  {let sx=0,sy=0,sa=0;if(FX.shake){const k=(now-FX.shake.t)/FX.shake.ms;if(k<1){sa=FX.shake.a*(1-k)*(VW/RW>2?VW/RW/2:1);sx=(Math.random()*2-1)*sa;sy=(Math.random()*2-1)*sa}else FX.shake=null}
+   ctx.drawImage(lo,sx-sa,sy-sa,VW+sa*2,VH+sa*2)}
   // overlays
   let anim=false;const px=VW/RW;
   const hk=(now-FX.hurt)/350;if(hk<1&&SET.flash){ctx.fillStyle=`rgba(170,20,10,${.4*(1-hk)})`;ctx.fillRect(0,0,VW,VH);anim=true}
@@ -1286,7 +1293,7 @@ function render(now){
 }
 function float(txt,c,big){FX.floats.push({txt,c,big:!!big,t:performance.now(),life:big?1500:900,ox:big?0:(Math.random()-.5)*40,oy:FX.floats.length*-24});dirty=true}
 let last=performance.now(),animF=0;
-const fxActive=now=>now-swingT<320||!!FX.bolt||!!FX.flash||now-FX.hurt<350||now-FX.fade<600||FX.floats.length>0||FX.ind.some(t=>now-t<700);
+const fxActive=now=>now-swingT<320||!!FX.shake||!!FX.bolt||!!FX.flash||now-FX.hurt<350||now-FX.fade<600||FX.floats.length>0||FX.ind.some(t=>now-t<700);
 function frame(now){
   const dt=Math.min(.1,(now-last)/1000);last=now;
   if(G&&buf){
@@ -1301,15 +1308,16 @@ function frame(now){
     if(rtUpdate(dt,now))moving=true;
     if(document.body.classList.contains('imm')){drawCompass();
       if((now/1000|0)!==(G._lt||0)){G._lt=now/1000|0;drawLog()}
+      if(SET.mini&&(now/250|0)!==(G._mt||0)){G._mt=now/250|0;drawMap($('mini'),15,true)}
       const lh=$('lockhint'),want=!isTouch()&&playing()&&!locked();if(lh.classList.contains('on')!==want)lh.classList.toggle('on',want)}
     if(!G)return requestAnimationFrame(frame);
     cam.x=G.P.px-.5;cam.y=G.P.py-.5;cam.a=G.P.a;
     // monsters walk smoothly between tiles at the pace of the world clock
     const gs=dt*1000/(RT.tick*.8);
     const glide=(o,key,tgt)=>{const df=tgt-o[key];if(Math.abs(df)<.002)o[key]=tgt;else{o[key]+=Math.sign(df)*Math.min(Math.abs(df),Math.abs(df)>1.5?Math.abs(df):gs);moving=true}};
-    for(const m of G.mons){glide(m,'vx',m.x);glide(m,'vy',m.y)}
+    for(const m of G.mons)if(m.px==null){glide(m,'vx',m.x);glide(m,'vy',m.y)}
     const af=Math.floor(now/480);if(af!==animF){animF=af;if(G.mons.some(m=>Math.abs(m.x-P.x)+Math.abs(m.y-P.y)<9))dirty=true}
-    const busy=G.mons.some(m=>(m.sleep&&Math.abs(m.x-P.x)+Math.abs(m.y-P.y)<8&&((now/600|0)!==(last/600|0)))||(m.hitT&&now-m.hitT<200)||(m.atkT&&now-m.atkT<340)||(MONS[m.t].float&&Math.abs(m.x-P.x)+Math.abs(m.y-P.y)<9));
+    const busy=G.mons.some(m=>m.wind||(m.awake&&Math.abs(m.x-P.x)+Math.abs(m.y-P.y)<14)||(m.sleep&&Math.abs(m.x-P.x)+Math.abs(m.y-P.y)<8&&((now/600|0)!==(last/600|0)))||(m.hitT&&now-m.hitT<200)||(m.atkT&&now-m.atkT<340)||(MONS[m.t].float&&Math.abs(m.x-P.x)+Math.abs(m.y-P.y)<9));
     if(G.camp&&((now/170|0)!==(last/170|0)||true)&&(now/170|0)!==(G._lf||0)){G._lf=now/170|0;dirty=true}
     if(moving||dirty||busy||FX.bump||fxActive(now)){dirty=false;if(render(now))dirty=true}
   }
@@ -1933,6 +1941,8 @@ document.addEventListener('keydown',e=>{
     if(open.length){open.forEach(o=>o.classList.remove('show'));return}
     openMenu('main');return}
   const k=e.key.toLowerCase();if(MOVEKEYS.includes(k)||k===' '){KEYS.add(k);if(playing())e.preventDefault();if(k!==' '||e.repeat)return}
+  if(k==='m'&&!e.repeat&&$('mapov').classList.contains('show')){$('mapov').classList.remove('show');return}
+  if(k==='tab'){e.preventDefault();if(!e.repeat&&playing()){SET.mini=SET.mini?0:1;saveSet();applyVideo()}return}
   if(k==='p'&&!e.repeat&&(playing()||$('menuov').classList.contains('show'))){if($('menuov').classList.contains('show'))$('menuov').classList.remove('show');else openMenu('main');return}
   if(!playing())return;audio();
   if(/^[1-9]$/.test(k)){hotbarUse(+k-1);return}
@@ -1955,12 +1965,13 @@ const KEYS=new Set(),IN={sx:0,sy:0,gx:0,gy:0,gt:0,gp:0,look:0,pitch:0};
 const PITCH_MAX=.55;
 let mouseAtk=false,bumpT=0,needRelease=false,wasOv=false,atkReady=0,castReady=0,swingT=-1e4;
 function syncPos(angle){const P=G.P;P.px=P.x+.5;P.py=P.y+.5;if(angle||P.a==null)P.a=P.dir*Math.PI/2;P._tx=P.x;P._ty=P.y}
-const blockedCell=(x,y)=>solid(cell(x,y))||!!monAt(x,y)||!!npcAt(x,y);
+const blockedCell=(x,y)=>solid(cell(x,y))||!!npcAt(x,y);
 function hitAt(px,py,ox,oy){const r=RT.rad;
   for(let cy=Math.floor(py-r);cy<=Math.floor(py+r);cy++)for(let cx=Math.floor(px-r);cx<=Math.floor(px+r);cx++){
     if(!blockedCell(cx,cy))continue;
     const was=cx>=Math.floor(ox-r)&&cx<=Math.floor(ox+r)&&cy>=Math.floor(oy-r)&&cy<=Math.floor(oy+r);
     if(!was)return[cx,cy]}
+  for(const m of G.mons){if(m.px==null)continue;const dn=Math.hypot(px-m.px,py-m.py);if(dn<MON.gap&&dn<Math.hypot(ox-m.px,oy-m.py))return[m.x,m.y]}
   return null}
 function rtUpdate(dt,now){
   const P=G.P;if(P.px==null||P.x!==P._tx||P.y!==P._ty)syncPos(P.px==null);
@@ -1985,6 +1996,9 @@ function rtUpdate(dt,now){
   if(tx!==P.x||ty!==P.y){P.x=tx;P.y=ty;P._tx=tx;P._ty=ty;if(!P.sneak)SFX.step();onEnter();if(!G)return true;updateSeen();ch=true}
   if(ch)hud();
   if((KEYS.has(' ')||mouseAtk)&&now>=atkReady)rtAttack();
+  if(!G||G.dead)return true;
+  if(now<HS)return true;
+  monUpdate(dt,now);if(!G||G.dead)return true;
   G.clock=(G.clock||0)+dt*1000;
   while(G&&!G.dead&&G.clock>=RT.tick){G.clock-=RT.tick;worldTick()}
   return moving||turn!==0||pd!==0}
@@ -1996,13 +2010,53 @@ function bumpInto(cx,cy,now){const P=G.P;
 const weaponCD=()=>RT.tick*({dagger:.8,martial:.75,axe:1.15,blunt:1.1,bow:1.1}[H.weapon.wt]||1);
 function rtAttack(){const now=performance.now();if(!G||now<atkReady)return;
   if(G.camp){attack();return}
-  const P=G.P;let best=-1,bd=1.25;
-  for(let d=0;d<4;d++){if(!monAt(P.x+DX[d],P.y+DY[d]))continue;
-    const ang=Math.atan2(P.x+DX[d]+.5-P.px,-(P.y+DY[d]+.5-P.py)),df=Math.abs((((ang-P.a)%(2*Math.PI))+3*Math.PI)%(2*Math.PI)-Math.PI);
-    if(df<bd){bd=df;best=d}}
-  if(best>=0)P.dir=best;
   atkReady=now+weaponCD();swingT=now;attack();dirty=true}
 {const oc=ACT.cast;ACT.cast=()=>{const now=performance.now();if(now<castReady)return;castReady=now+RT.tick*1.1;oc()}}
+// ---- Monsters in real time: they move freely (m.px/m.py; m.x/m.y is the tile under them), steer along the
+// shortest path or straight at you when close, and telegraph attacks: a wind-up (raised weapon, red glow, growl)
+// before the blow lands. Step out of reach during the wind-up and the attack whiffs.
+const MON={reach:1.18,wind:430,bossWind:620,gap:.62,rad:.28,sep:.55};
+const monSpeed=(m,M,st)=>(1000/RT.tick)*.95*(M.slow?.5:1)*(st.slow>0?.5:1);
+function monWall(px,py,M){const r=MON.rad;for(let cy=Math.floor(py-r);cy<=Math.floor(py+r);cy++)for(let cx=Math.floor(px-r);cx<=Math.floor(px+r);cx++){const t=cell(cx,cy);if(solid(t))return[cx,cy,t]}return null}
+function moveMon(m,vx,vy,M){const P=G.P;
+  for(const [ax,ay] of [[vx,0],[0,vy]]){if(!ax&&!ay)continue;const nx=m.px+ax,ny=m.py+ay;
+    const w=monWall(nx,ny,M);if(w){if(w[2]===DOOR&&M.opens){G.map[idx(w[0],w[1])]=ODOOR;if(G.seen[idx(w[0],w[1])])log('A door bangs open!','bad')}continue}
+    const dp=Math.hypot(nx-P.px,ny-P.py);if(dp<MON.gap&&dp<Math.hypot(m.px-P.px,m.py-P.py))continue;
+    let crowd=false;for(const o of G.mons){if(o===m||o.px==null)continue;const dn=Math.hypot(nx-o.px,ny-o.py);if(dn<MON.sep&&dn<Math.hypot(m.px-o.px,m.py-o.py)){crowd=true;break}}
+    if(crowd)continue;
+    if(m.boss&&Math.hypot(nx-(m.hx+.5),ny-(m.hy+.5))>6.5)continue;
+    m.px=nx;m.py=ny}
+  m.x=Math.floor(m.px);m.y=Math.floor(m.py)}
+function monUpdate(dt,now){
+  const P=G.P,key=P.x+','+P.y;if(G._bk!==key||!G._bd){G._bk=key;G._bd=bfs(G.map,P.x,P.y,t=>t!==WALL)}const D=G._bd;
+  for(const m of G.mons.slice()){
+    if(!G.mons.includes(m))continue;
+    if(m.px==null){m.px=m.x+.5;m.py=m.y+.5}
+    const M=MONS[m.t],st=m.st||{},dx=P.px-m.px,dy=P.py-m.py,dist=Math.hypot(dx,dy);
+    if(m.wind){m.f=Math.abs(dx)>Math.abs(dy)?(dx>0?1:3):(dy>0?2:0);
+      if(now>=m.wind){m.wind=0;m.cd=now+RT.tick*(M.slow?1.9:1.35)*(m.boss?.9:1);
+        if(st.stun>0){}
+        else if(dist<=MON.reach+.12){monAttack(m);if(P.hp<=0&&!G.dead){P.hp=0;log('You fall, and the darkness takes you.','bad');die();return}hud()}
+        else{m.atkT=now;SFX.swing();log(`You step back and the ${mname(m)} swings at empty air.`,'good')}}
+      continue}
+    if(!m.awake||st.stun>0){const tx=m.x+.5,ty=m.y+.5,ex=tx-m.px,ey=ty-m.py,el=Math.hypot(ex,ey);
+      if(el>.01){const sp=Math.min(el,dt*1.2);m.px+=ex/el*sp;m.py+=ey/el*sp}m.vx=m.px-.5;m.vy=m.py-.5;continue}
+    if(dist<=MON.reach&&(!m.cd||now>=m.cd)&&los(m.x,m.y,P.x,P.y)){m.wind=now+(m.boss?MON.bossWind:MON.wind);m.wT=now;
+      tone(m.boss?70:120+Math.random()*40,.22,'sawtooth',.05,.7);m.vx=m.px-.5;m.vy=m.py-.5;continue}
+    if(st.root>0||dist<=MON.gap+.04){m.vx=m.px-.5;m.vy=m.py-.5;continue}
+    let tx,ty;
+    if(dist<3.2&&los(m.x,m.y,P.x,P.y)){tx=P.px;ty=P.py}
+    else{const di=D[idx(m.x,m.y)];if(di<0||di>16){m.vx=m.px-.5;m.vy=m.py-.5;continue}let best=null;
+      for(let k=0;k<4;k++){const nx=m.x+DX[k],ny=m.y+DY[k],nd=D[idx(nx,ny)];if(nd<0||nd>=di)continue;if(cell(nx,ny)===DOOR&&!M.opens)continue;
+        if(!best||nd<best.nd||(nd===best.nd&&Math.random()<.5))best={nx,ny,nd}}
+      if(!best){m.vx=m.px-.5;m.vy=m.py-.5;continue}tx=best.nx+.5;ty=best.ny+.5}
+    let vx=tx-m.px,vy=ty-m.py;const l=Math.hypot(vx,vy);
+    if(l>.01){const sp=Math.min(l,monSpeed(m,M,st)*dt);vx=vx/l*sp;vy=vy/l*sp;moveMon(m,vx,vy,M);
+      m.f=Math.abs(vx)>Math.abs(vy)?(vx>0?1:3):(vy>0?2:0)}
+    m.vx=m.px-.5;m.vy=m.py-.5}}
+// Hit feedback: a short screen shake, and hit-stop (the world freezes for a few frames) on crits and kills.
+let HS=0;
+function shake(a,ms){FX.shake={t:performance.now(),a,ms}}
 // Weapon held in view: bobs while walking, swings (or recoils, for ranged) on attack.
 const WPC=new Map();
 function weaponCanvas(t){let c=WPC.get(t);if(!c){c=document.createElement('canvas');c.width=t.w;c.height=t.h;const g=c.getContext('2d'),im=g.createImageData(t.w,t.h);
@@ -2043,6 +2097,7 @@ function openMenu(tab){
       +optRow('Field of view','How wide you see. Wider shows more but shrinks things.',slider('fov',55,110,'°'))
       +optRow('Brightness','How far your torchlight reaches.',slider('bright',60,160))
       +optRow('Interface size',`Text and buttons${SET.ui?'':` (auto: ${pct(uiScale())}%)`}.`,cyc('ui',ui[1]))
+      +optRow('Minimap','Corner map in the modern HUD. TAB toggles it while playing.',cyc('mini',SET.mini?'ON':'OFF'))
       +optRow('HUD style','Modern: full-screen view with hotbar and compass. Classic: the original panel layout.',cyc('hud',SET.hud==='classic'?'CLASSIC':'MODERN'))
       +(SET.hud==='classic'?optRow('Layout','Portrait puts controls below; wide puts them beside the view.',cyc('layout',lay[1])):'')
       +optRow('Screen flashes','Red hurt flash and spell flashes.',cyc('flash',SET.flash?'ON':'OFF'))
@@ -2053,7 +2108,7 @@ function openMenu(tab){
       <b>W A S D</b><span>Move and strafe</span><b>MOUSE</b><span>Look around (the cursor only appears in menus)</span><b>ARROWS</b><span>Move and turn</span>
       <b>LEFT CLICK / SPACE</b><span>Attack (hold to keep swinging)</span><b>RIGHT CLICK / R</b><span>Cast readied spell</span><b>1-9 / WHEEL</b><span>Hotbar: 1 drinks a potion, 2+ ready a spell (press again to cast)</span><b>E</b><span>Use: open doors, talk, craft, take stairs (also F, ENTER)</span>
       <b>R</b><span>Cast readied spell</span><b>X</b><span>Sneak</span><b>C</b><span>Pick up</span><b>H</b><span>Drink potion</span>
-      <b>I</b><span>Pack</span><b>K</b><span>Character sheet</span><b>M</b><span>Map</span><b>L</b><span>Log</span><b>ESC / P</b><span>This menu</span></div>
+      <b>I</b><span>Pack</span><b>K</b><span>Character sheet</span><b>M</b><span>Map (press again to close)</span><b>TAB</b><span>Corner minimap on/off</span><b>L</b><span>Log</span><b>ESC / P</b><span>This menu</span></div>
       <p class="dim" style="font-size:18px;text-align:left">Touch: the stick moves you; drag the view to look around; tap the view or press ATTACK to strike; the USE button opens doors, talks and takes stairs.</p>`;
   }
   else if(tab==='saves')h=savesHTML();
@@ -2141,6 +2196,7 @@ function cycleSet(k){
   else if(k==='layout')SET.layout=nxt(LAYOUTS,SET.layout);
   else if(k==='flash')SET.flash=SET.flash?0:1;
   else if(k==='invy')SET.invy=SET.invy?0:1;
+  else if(k==='mini')SET.mini=SET.mini?0:1;
   else if(k==='fsStart')SET.fsStart=SET.fsStart?0:1;
   else if(k==='hud')SET.hud=SET.hud==='classic'?'imm':'classic';
   saveSet();applyVideo();openMenu(menuTab);
@@ -2193,6 +2249,7 @@ function padPress(i,rep){
   if(i===9){if($('menuov').classList.contains('show'))$('menuov').classList.remove('show');else openMenu('main');return}
   if(ov){
     if(rep&&!PAD_DIR[i])return;
+    if(i===8&&ov.id==='mapov'){ov.classList.remove('show');return}
     if(i===1){if(ov.id==='menuov')document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape'}));else if(ov.id!=='titleov'&&ov.id!=='deadov')ov.classList.remove('show');return}
     if(PAD_DIR[i]){padNav(ov,PAD_DIR[i]);return}
     if(i===0){const el=padCur(ov);if(el){if(el.tagName==='BUTTON')el.click();else el.focus()}}

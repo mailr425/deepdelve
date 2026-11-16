@@ -64,8 +64,16 @@ Facing codes are 0=N, 1=E, 2=S, 3=W, with `DX=[0,1,0,-1]` and `DY=[-1,0,1,0]`.
   just sets `P.x/P.y`; `rtUpdate` notices and re-syncs.
 - The world advances every `RT.tick` ms (700) through `worldTick()` (monsters act, regen, autosave every
   4 ticks), and pauses while any overlay is open. `endTurn()` is now a light HUD refresh.
-- Monsters still live on tiles and glide between them; they attack when orthogonally adjacent.
-- Attacks use per-weapon cooldowns (`weaponCD`, about one tick). Nothing happens on collision: doors, NPCs,
+- Monsters move freely every frame (`monUpdate`): `m.px/m.py` is their position, `m.x/m.y` the tile under them.
+  They steer along the shortest path (straight at you when close and in sight), keep apart from each other,
+  and telegraph attacks: a wind-up (`m.wind`, attack frame + red glow + growl, `MON.wind` ms) after which the
+  blow lands only if you are still within `MON.reach`. The world tick (`monstersAct`) now only handles
+  noticing/waking/losing track and status-effect countdowns.
+- Aiming: melee hits the foe nearest the crosshair within reach (`meleeTarget`); bows, thrown weapons and bolt
+  spells fly along the crosshair ray (`lineMons`).
+- Hit feedback: `shake(amp,ms)` on taking damage, and hit-stop (`HS`, world frozen ~70-160 ms) on crits and kills.
+- Minimap: corner map in the modern HUD (`SET.mini`, TAB toggles). M opens and closes the full map.
+- Player attacks use per-weapon cooldowns (`weaponCD`, about one tick). Nothing happens on collision: doors, NPCs,
   stations, the gate and stairs are used with USE (E key, B on a controller, the USE button, or tapping the
   view). A prompt like `[E] OPEN` shows in the view when something is usable (`useMode`).
 - HUD: `body.imm` (default, `SET.hud`) is the modern full-screen layout: compass strip (`drawCompass`), crosshair,

@@ -9,10 +9,10 @@ function botTick(){
   const P=G.P;
   if(P.hp<maxHP()*.35&&H.potions>0)ACT.pot();
   // adjacent monster?
-  let adj=null;for(let d=0;d<4;d++){const m=monAt(P.x+DX[d],P.y+DY[d]);if(m){adj={m,d};break}}
+  let adj=null;{let bd=9;for(const m of G.mons){const dd=Math.hypot((m.px??m.x+.5)-P.px,(m.py??m.y+.5)-P.py);if(dd<1.35&&dd<bd){bd=dd;adj={m}}}}
   IN.sx=0;IN.sy=0;KEYS.delete(' ');
   const face=(tx,ty)=>{P.a=Math.atan2(tx+.5-P.px,-(ty+.5-P.py))};
-  if(adj){face(adj.m.x,adj.m.y);KEYS.add(' ');// stay centered-ish
+  if(adj){P.a=Math.atan2((adj.m.px??adj.m.x+.5)-P.px,-((adj.m.py??adj.m.y+.5)-P.py));KEYS.add(' ');// stay centered-ish
     return}
   // target: nearest reachable monster seen, else stairs if open, else nearest unseen tile
   const pass=t=>t!==WALL&&t!==GATE;
