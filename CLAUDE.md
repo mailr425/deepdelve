@@ -11,6 +11,8 @@ built as a family learn-gamedev-with-AI project. The whole game is one file, `in
 - Keep it mobile-first: portrait, touch controls and swipes (swipe left turns left), 44 px or
   larger tap targets. Keyboard works too.
 - Keep it offline: `sw.js` must sit next to `index.html`. Do not add anything that needs a server.
+- Any new overlay buttons work with the controller automatically (they are found by query), as long as
+  they are real `<button>` elements with `data-cmd`.
 - Make small, surgical edits. The file is large, so use targeted edits, not rewrites.
 - After a change, open the game and check for console errors. The quickest check is
   `python test/smoke.py`, which loads the page headless and reports errors.
@@ -46,7 +48,9 @@ The script is split by `// ===== SECTION =====` headers. Search for the header t
 | MATERIALS & CRAFTING | `MATCAT`, `STATIONS`, `ELIXIRS`, `craftGear`, salvage, enchant, spellcraft |
 | INPUT | Buttons, swipes, keys; the `ovT` guard that stops taps falling through overlays |
 | SETTINGS | `SET` (saved as `deepdelve_settings`): resolution preset, brightness, UI scale, layout, flashes, volumes; `applyVideo`, `applyAudio`, audio buses `BUS.mus` / `BUS.sfx` |
-| MAIN MENU / OPTIONS | Escape menu: `openMenu(tab)` with main, sound, video and controls tabs |
+| MAIN MENU / OPTIONS | Escape menu: `openMenu(tab)` with main, sound, video, controls and saves tabs |
+| SAVE TRANSFER | Save codes `DDSAVE1:<z|p>:<base64>` (gzip via CompressionStream): `packSave`, `unpackSave`, export/import UI (`SV`, `saveCmd`) |
+| CONTROLLER | Gamepad API polling (`padLoop`): buttons map onto `ACT` in the dungeon; in overlays the d-pad moves a `.padfocus` highlight (spatial nav), A clicks, B backs out, Start toggles the menu |
 | BOOT | Font, service worker, title screen |
 
 Facing codes are 0=N, 1=E, 2=S, 3=W, with `DX=[0,1,0,-1]` and `DY=[-1,0,1,0]`.
@@ -75,7 +79,7 @@ It needs `pip install playwright` and then `playwright install chromium`.
 - Phase 4, a richer labyrinth: multi-floor quests (retrieve, rescue, slay), set-piece floors,
   environment variety by depth (caves, crypts, forges, the void), props and decals.
 - Phase 5, Trunelro's towns: a surface hub with shops, guilds and quests; Renown; portals.
-- Anytime: better art, player weapon animations, controller support (Gamepad API), and
+- Anytime: better art, player weapon animations, and
   `test/camp.py` from the old test set needs rewriting for the current camp layout.
 - `godot/` holds a paused Godot 4 port (stage 1 of 11). Ignore it unless asked.
 
