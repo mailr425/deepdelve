@@ -1,6 +1,6 @@
 # Deepdelve
 
-A first-person, turn-based, grid dungeon crawler (Eye of the Beholder / Legend of Grimrock style),
+A first-person, real-time dungeon crawler on a tile map (Legend of Grimrock / Dungeon Master style),
 built as a family learn-gamedev-with-AI project. The whole game is one file, `index.html`
 (about 190 KB, no libraries, no network). It runs on phones, tablets and PCs, and works offline.
 
@@ -38,7 +38,7 @@ The script is split by `// ===== SECTION =====` headers. Search for the header t
 | STATE | `H` (hero, saved) and `G` (current floor), save/load, `migrateHero` |
 | GENERATION | Random floor carving, monster and loot placement, the guardian |
 | FLOW | Descend, floor clear, return to camp, `die` |
-| ACTIONS | Move, turn, `attack`/`strike`, ranged, sneak, pickup, potions |
+| ACTIONS | `attack`/`strike`, ranged, sneak, pickup, potions (`tryMove`/`turn` are legacy grid moves) |
 | MONSTERS | `monstersAct`: facing, vision cones, sleep, chase, `monAttack` |
 | AUDIO / MUSIC | `SFX`, `TRACKS`, `setMusic`, chiptune voices, the Karplus-Strong camp guitar |
 | RENDERER | `render(now)`: 160 px wide raycaster, floor/ceiling casting, Bayer-dithered light, sprites |
@@ -47,6 +47,7 @@ The script is split by `// ===== SECTION =====` headers. Search for the header t
 | CAMP | `CAMP_MAP`, `enterCamp`, NPC visitors (`MERCH`, `EVENTS`), trainer, stash |
 | MATERIALS & CRAFTING | `MATCAT`, `STATIONS`, `ELIXIRS`, `craftGear`, salvage, enchant, spellcraft |
 | INPUT | Buttons, swipes, keys; the `ovT` guard that stops taps falling through overlays |
+| REAL-TIME MOVEMENT | `RT` (tick, speed, turn rate, collision radius), `rtUpdate` (free movement, collision, world clock), `rtAttack` (weapon cooldowns, auto-aim at adjacent foes), `drawWeapon` (weapon in view) |
 | SETTINGS | `SET` (saved as `deepdelve_settings`): resolution preset, brightness, UI scale, layout, flashes, volumes; `applyVideo`, `applyAudio`, audio buses `BUS.mus` / `BUS.sfx` |
 | MAIN MENU / OPTIONS | Escape menu: `openMenu(tab)` with main, sound, video, controls and saves tabs |
 | SAVE TRANSFER | Save codes `DDSAVE1:<z|p>:<base64>` (gzip via CompressionStream): `packSave`, `unpackSave`, export/import UI (`SV`, `saveCmd`) |
@@ -55,9 +56,23 @@ The script is split by `// ===== SECTION =====` headers. Search for the header t
 
 Facing codes are 0=N, 1=E, 2=S, 3=W, with `DX=[0,1,0,-1]` and `DY=[-1,0,1,0]`.
 
+## Real-time model
+
+- The hero moves freely: `P.px/P.py` (tile units, tile centre = x+.5) and `P.a` (view angle, 0 = north,
+  `fx=sin(a)`, `fy=-cos(a)`). `P.x/P.y` is the tile under the hero and `P.dir` the nearest facing, so all
+  grid rules (items, doors, stairs, stealth, monster adjacency) still work. Code that teleports the hero
+  just sets `P.x/P.y`; `rtUpdate` notices and re-syncs.
+- The world advances every `RT.tick` ms (700) through `worldTick()` (monsters act, regen, autosave every
+  4 ticks), and pauses while any overlay is open. `endTurn()` is now a light HUD refresh.
+- Monsters still live on tiles and glide between them; they attack when orthogonally adjacent.
+- Attacks use per-weapon cooldowns (`weaponCD`, about one tick); walking into a foe attacks; walking into
+  an NPC, the camp gate or a closed door uses it.
+
 ## Balance
 
-All difficulty lives in `BAL`. To check a change, run the bot simulator:
+All difficulty lives in `BAL` (plus `RT.tick` and `weaponCD` for pacing). NOTE: the bot simulator below was
+written for the turn-based version (tag `turn-based-v16`) and needs updating for real time.
+To check a change, run the bot simulator:
 
 ```
 python test/curve.py '{"deepDmg":1.6}'
