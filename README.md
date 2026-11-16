@@ -57,7 +57,8 @@ It holds the full build history and design notes.
 | `index.html` | The game |
 | `sw.js` | Offline support (keep next to `index.html`) |
 | `manifest.webmanifest`, `icon-*.png` | Lets phones and PCs install it as an app |
-| `play.bat` | Opens the game in an app window on Windows |
+| `play.bat` | Pulls the latest version from GitHub, then opens the game in an app window |
+| `autosync.bat` | Keeps the folder in step with GitHub (pulls every 60 seconds while its window is open) |
 | `CLAUDE.md` | Instructions for Claude Code |
 | `test/` | `smoke.py` (quick error check) and `curve.py` + `bot.js` (balance simulator) |
 | `tools/` | Font and sprite generators, data/art exporter |
