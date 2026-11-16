@@ -65,8 +65,12 @@ Facing codes are 0=N, 1=E, 2=S, 3=W, with `DX=[0,1,0,-1]` and `DY=[-1,0,1,0]`.
 - The world advances every `RT.tick` ms (700) through `worldTick()` (monsters act, regen, autosave every
   4 ticks), and pauses while any overlay is open. `endTurn()` is now a light HUD refresh.
 - Monsters still live on tiles and glide between them; they attack when orthogonally adjacent.
-- Attacks use per-weapon cooldowns (`weaponCD`, about one tick); walking into a foe attacks; walking into
-  an NPC, the camp gate or a closed door uses it.
+- Attacks use per-weapon cooldowns (`weaponCD`, about one tick). Nothing happens on collision: doors, NPCs,
+  stations, the gate and stairs are used with USE (E key, B on a controller, the USE button, or tapping the
+  view). A prompt like `[E] OPEN` shows in the view when something is usable (`useMode`).
+- Look up/down is a y-shear: the horizon `HZ` moves by `P.pitch*F` (clamped to `PITCH_MAX`).
+- Escape: in fullscreen started from the menu, Chrome/Edge's Keyboard Lock passes Escape to the game
+  (hold Escape to leave fullscreen). Opening any overlay releases pointer lock (`show()`).
 
 ## Balance
 

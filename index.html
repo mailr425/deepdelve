@@ -135,7 +135,7 @@ body.wide #side{width:380px;display:flex;flex-direction:column;justify-content:f
   <p class="dim">A dungeon that remembers you.</p>
   <p class="dim" id="offline" style="font-size:10px"></p>
   <h3>CHOOSE YOUR HERO</h3><div id="slots"></div>
-  <button class="wide" data-cmd="menu">OPTIONS</button>
+  <button class="wide" data-cmd="menu">OPTIONS</button><button class="wide" data-cmd="exitgame">QUIT GAME</button>
   <p class="dim" style="font-size:20px;margin-top:14px">Move with the stick (WASD on a PC). Drag the view to look around (the mouse on a PC). Tap the view or press ATTACK to strike. Each floor's stairs are sealed by a guardian. Gold buys permanent power at camp.</p>
 </div></div>
 <div class="ov" id="menuov"><div class="box panel" id="menubox"></div></div>
@@ -902,7 +902,7 @@ const RES=[['retro','RETRO',120],['classic','CLASSIC',160],['sharp','SHARP',240]
 const RES_CAP=640*1000;   // max rendered pixels per frame (keeps big/4K screens smooth)
 const UIS=[[0,'AUTO'],[1,'100%'],[1.5,'150%'],[2,'200%']];
 const LAYOUTS=[['auto','AUTO'],['tall','PORTRAIT'],['wide','WIDE']];
-const SET={res:'classic',fov:.74,look:1,bright:1,ui:0,layout:'auto',flash:1,master:.9,music:.7,sfx:.8};
+const SET={res:'classic',fov:.74,look:1,invy:0,bright:1,ui:0,layout:'auto',flash:1,master:.9,music:.7,sfx:.8};
 try{Object.assign(SET,JSON.parse(localStorage.getItem(SET_KEY)||'{}'))}catch(e){}
 function saveSet(){try{localStorage.setItem(SET_KEY,JSON.stringify(SET))}catch(e){}}
 const uiScale=()=>SET.ui||(()=>{const k=Math.min(innerWidth/400,innerHeight/600);return k>=2?2:k>=1.5?1.5:1})();
@@ -1098,7 +1098,7 @@ const BLACK=0xff000000>>>0;
 function shp(col,L,x,y){const q=(L*NL+BAY[((y&3)<<2)|(x&3)])|0;if(q<=0)return BLACK;if(q>=NL)return col;const m=LEVM[q];
   return((255<<24)|((((col>>>16)&255)*m>>8)<<16)|((((col>>>8)&255)*m>>8)<<8)|((col&255)*m>>8))>>>0}
 function render(now){
-  const P=G.P,F=Math.min(VW,VH*1.1)*RW/VW*(.5/Math.tan((SET.fov||.74)*Math.PI/3.6)),half=RW/2,HZ=RH/2;LF=G.camp?.07+Math.sin(now/170)*.004:.155;
+  const P=G.P,F=Math.min(VW,VH*1.1)*RW/VW*(.5/Math.tan((SET.fov||.74)*Math.PI/3.6)),half=RW/2,HZ=RH/2+(P.pitch||0)*F;LF=G.camp?.07+Math.sin(now/170)*.004:.155;
   const fx=Math.sin(cam.a),fy=-Math.cos(cam.a),rx=Math.cos(cam.a),ry=Math.sin(cam.a);
   let bx=0,by=0;
   if(FX.bump){const k=(now-FX.bump.t)/220;if(k<1){const a=Math.sin(k*Math.PI)*.07;bx=DX[FX.bump.d]*a;by=DY[FX.bump.d]*a}else FX.bump=null}
@@ -1190,6 +1190,10 @@ function render(now){
     const y=Math.round(VH*.4-k*40+f.oy),x=Math.round(VW/2+f.ox);
     ctx.fillStyle='#000';ctx.fillText(f.txt,x+3,y+3);ctx.fillStyle=f.c;ctx.fillText(f.txt,x,y);ctx.globalAlpha=1}
   if(drawWeapon(now))anim=true;
+  if(!G.dead){const um=useMode();if(um[2]!=='wait'){const key=padLoopOn?'B':matchMedia('(pointer:coarse)').matches?'':'E';
+    const txt=(key?`[${key}] `:'')+um[1]+(um[2]==='npc'&&G.camp?'':'');ctx.font='20px Delve,monospace';ctx.textAlign='center';
+    const tw=ctx.measureText(txt).width,yy=Math.round(VH*.70);ctx.fillStyle='rgba(0,0,0,.6)';ctx.fillRect(Math.round(VW/2-tw/2-8),yy-18,Math.round(tw+16),26);
+    ctx.fillStyle=um[2]==='sealed'?'#e0584a':'#ffd36a';ctx.fillText(txt,VW/2,yy)}}
   if(P.sneak){ctx.fillStyle='rgba(4,8,30,.28)';ctx.fillRect(0,0,VW,VH)}
   if(FX.flash){const k=(now-FX.flash.t)/280;if(k<1&&SET.flash){ctx.globalAlpha=.3*(1-k);ctx.fillStyle=FX.flash.c;ctx.fillRect(0,0,VW,VH);ctx.globalAlpha=1;anim=true}else FX.flash=null}
   if(FX.bolt)anim=true;
@@ -1268,7 +1272,7 @@ function renderSlots(){let h='';
       <button data-cmd="play" data-s="${i}" class="gold">PLAY</button><button data-cmd="del" data-s="${i}" style="${arm?'background:#6a1a12':''}">${arm?'SURE?':'DEL'}</button></div>`}
   $('slots').innerHTML=h}
 function showTitle(){hideAll();renderSlots();drawLog();$('bossbar').style.display='none';show('titleov');updateMusic()}
-function show(id){ovT=performance.now();$(id).classList.add('show')}
+function show(id){ovT=performance.now();$(id).classList.add('show');if(document.pointerLockElement)try{document.exitPointerLock()}catch(e){}}
 function hideAll(){document.querySelectorAll('.ov').forEach(o=>o.classList.remove('show'))}
 function openMap(){drawMap($('bigmap'),MW,false);show('mapov')}
 function openStairs(){
@@ -1428,7 +1432,7 @@ function enterCamp(msg,newVisit){
   G.bl=null;ensureBlood();FX.parts=[];FX.deaths=[];$('bossbar').style.display='none';
   snapCam();FX.fade=performance.now();
   log(msg||`${H.name} rests at camp.`,'info');
-  log('Walk into someone to talk, or into a workbench to craft. The gate at the far end leads down into the depths.','');
+  log('Face someone and press USE (E) to talk, or a workbench to craft. The gate at the far end leads down into the depths.','');
   save();hud();updateMusic();
 }
 const npcAt=(x,y)=>G&&G.npcs&&G.npcs.find(n=>n.x===x&&n.y===y);
@@ -1701,6 +1705,7 @@ document.addEventListener('click',e=>{
   if(c==='mtab'){if(b.dataset.t==='saves')Object.assign(SV,{mode:'list',code:'',msg:'',arm:false});openMenu(b.dataset.t);return}
   if(c==='sv'){saveCmd(b.dataset.op,+b.dataset.s);return}
   if(c==='resume'){$('menuov').classList.remove('show');return}
+  if(c==='exitgame'){quitGame();return}
   if(c==='quit'){$('menuov').classList.remove('show');save();G=null;H=null;showTitle();return}
   if(c==='setc'){cycleSet(b.dataset.k);return}
   if(c==='fs'){toggleFS();return}
@@ -1765,15 +1770,15 @@ VIEWEL.addEventListener('pointerdown',e=>{if(e.target.closest('#sneakbtn'))retur
   if(locked()){if(playing()&&e.button===0){mouseAtk=true;rtAttack()}return}
   drag={id:e.pointerId,x:e.clientX,y:e.clientY,lx:e.clientX,moved:0,t:performance.now(),mouse:e.pointerType==='mouse'};
   try{VIEWEL.setPointerCapture(e.pointerId)}catch(err){}});
-VIEWEL.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;const dx=e.clientX-drag.lx;drag.lx=e.clientX;
-  drag.moved=Math.max(drag.moved,Math.hypot(e.clientX-drag.x,e.clientY-drag.y));if(playing()&&drag.moved>8)IN.look+=dx*.0065*(SET.look||1)});
+VIEWEL.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;const dx=e.clientX-drag.lx,dy=e.clientY-(drag.ly??drag.y);drag.lx=e.clientX;drag.ly=e.clientY;
+  drag.moved=Math.max(drag.moved,Math.hypot(e.clientX-drag.x,e.clientY-drag.y));if(playing()&&drag.moved>8){IN.look+=dx*.0065*(SET.look||1);IN.pitch-=dy*.0045*(SET.look||1)}});
 VIEWEL.addEventListener('pointerup',e=>{if(!drag||e.pointerId!==drag.id)return;const d=drag;drag=null;if(!playing())return;
   if(d.moved<10&&performance.now()-d.t<400){
     if(d.mouse&&VIEWEL.requestPointerLock&&!G.camp){try{VIEWEL.requestPointerLock()}catch(err){}}
     tapView()}});
 VIEWEL.addEventListener('pointercancel',()=>drag=null);
 document.addEventListener('mouseup',()=>mouseAtk=false);
-document.addEventListener('mousemove',e=>{if(locked()&&playing())IN.look+=e.movementX*.0026*(SET.look||1)});
+document.addEventListener('mousemove',e=>{if(locked()&&playing()){IN.look+=e.movementX*.0026*(SET.look||1);IN.pitch-=e.movementY*.0026*(SET.look||1)}});
 let wasLocked=false;
 document.addEventListener('pointerlockchange',()=>{const l=locked();if(wasLocked&&!l&&G&&playing())openMenu('main');wasLocked=l});
 // virtual stick
@@ -1797,8 +1802,9 @@ document.addEventListener('keydown',e=>{
     if(open.length){open.forEach(o=>o.classList.remove('show'));return}
     openMenu('main');return}
   const k=e.key.toLowerCase();if(MOVEKEYS.includes(k)||k===' '){KEYS.add(k);if(playing())e.preventDefault();if(k!==' '||e.repeat)return}
+  if(k==='p'&&!e.repeat&&(playing()||$('menuov').classList.contains('show'))){if($('menuov').classList.contains('show'))$('menuov').classList.remove('show');else openMenu('main');return}
   if(!playing())return;audio();
-  const m={' ':'atk',f:'use',enter:'use',h:'pot',i:'bag',m:'map',l:'log',c:'pick',r:'cast',x:'sneak',k:'char'};
+  const m={' ':'atk',e:'use',f:'use',enter:'use',h:'pot',i:'bag',m:'map',l:'log',c:'pick',r:'cast',x:'sneak',k:'char'};
   if(m[k]){e.preventDefault();ACT[m[k]]()}});
 
 document.addEventListener('keyup',e=>KEYS.delete(e.key.toLowerCase()));
@@ -1809,8 +1815,9 @@ window.addEventListener('blur',()=>KEYS.clear());
 // hold the current tile and nearest facing, so the grid-based rules (items, doors, monsters, stealth)
 // keep working. The world (monsters, regen) advances every RT.tick ms while no menu is open.
 const RT={tick:700,speed:2.5,turn:2.6,rad:.22};
-const MOVEKEYS=['w','a','s','d','q','e','arrowup','arrowdown','arrowleft','arrowright'];
-const KEYS=new Set(),IN={sx:0,sy:0,gx:0,gy:0,gt:0,look:0};
+const MOVEKEYS=['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'];
+const KEYS=new Set(),IN={sx:0,sy:0,gx:0,gy:0,gt:0,gp:0,look:0,pitch:0};
+const PITCH_MAX=.55;
 let mouseAtk=false,bumpT=0,needRelease=false,wasOv=false,atkReady=0,castReady=0,swingT=-1e4;
 function syncPos(angle){const P=G.P;P.px=P.x+.5;P.py=P.y+.5;if(angle||P.a==null)P.a=P.dir*Math.PI/2;P._tx=P.x;P._ty=P.y}
 const blockedCell=(x,y)=>solid(cell(x,y))||!!monAt(x,y)||!!npcAt(x,y);
@@ -1823,10 +1830,12 @@ function hitAt(px,py,ox,oy){const r=RT.rad;
 function rtUpdate(dt,now){
   const P=G.P;if(P.px==null||P.x!==P._tx||P.y!==P._ty)syncPos(P.px==null);
   const ov=!playing();if(wasOv&&!ov)needRelease=true;wasOv=ov;
-  if(ov){IN.look=0;return false}
+  if(ov){IN.look=IN.pitch=0;return false}
   const K=k=>KEYS.has(k)?1:0;
-  const turn=IN.look+((K('e')+K('arrowright')>0?1:0)-(K('q')+K('arrowleft')>0?1:0)+IN.gt)*RT.turn*dt;IN.look=0;
+  const turn=IN.look+(K('arrowright')-K('arrowleft')+IN.gt)*RT.turn*dt;IN.look=0;
   P.a+=turn;
+  const pd=(IN.pitch+IN.gp*RT.turn*.6*dt)*(SET.invy?-1:1);IN.pitch=0;
+  if(pd)P.pitch=clamp((P.pitch||0)+pd,-PITCH_MAX,PITCH_MAX);
   let f=(K('w')||K('arrowup'))-(K('s')||K('arrowdown'))-IN.sy-IN.gy,sd=K('d')-K('a')+IN.sx+IN.gx;
   const len=Math.hypot(f,sd);if(len>1){f/=len;sd/=len}
   const moving=len>.05;if(!moving)needRelease=false;
@@ -1835,7 +1844,7 @@ function rtUpdate(dt,now){
     const dx=(fx*f+rx*sd)*sp,dy=(fy*f+ry*sd)*sp,ox=P.px,oy=P.py;let hit=hitAt(P.px+dx,P.py,ox,oy);if(!hit)P.px+=dx;
     const h2=hitAt(P.px,P.py+dy,P.px,oy);if(!h2)P.py+=dy;hit=hit||h2;
     P.bob=(P.bob||0)+dt*Math.min(1,len)*10;
-    if(hit&&f>.3&&!needRelease&&now>bumpT)bumpInto(hit[0],hit[1],now)}
+  }
   const nd=((Math.round(P.a/(Math.PI/2))%4)+4)%4,tx=Math.floor(P.px),ty=Math.floor(P.py);let ch=false;
   if(nd!==P.dir){P.dir=nd;P.turns=nd;ch=true}
   if(tx!==P.x||ty!==P.y){P.x=tx;P.y=ty;P._tx=tx;P._ty=ty;if(!P.sneak)SFX.step();onEnter();if(!G)return true;updateSeen();ch=true}
@@ -1843,7 +1852,7 @@ function rtUpdate(dt,now){
   if((KEYS.has(' ')||mouseAtk)&&now>=atkReady)rtAttack();
   G.clock=(G.clock||0)+dt*1000;
   while(G&&!G.dead&&G.clock>=RT.tick){G.clock-=RT.tick;worldTick()}
-  return moving||turn!==0}
+  return moving||turn!==0||pd!==0}
 function bumpInto(cx,cy,now){const P=G.P;
   if(cx!==P.x+DX[P.dir]||cy!==P.y+DY[P.dir])return;
   bumpT=now+650;
@@ -1887,6 +1896,7 @@ function openMenu(tab){
     h+=`<button class="wide" data-cmd="mtab" data-t="sound">SOUND</button><button class="wide" data-cmd="mtab" data-t="video">VIDEO</button><button class="wide" data-cmd="mtab" data-t="controls">CONTROLS</button><button class="wide" data-cmd="mtab" data-t="saves">SAVES (MOVE BETWEEN DEVICES)</button>`;
     if(G)h+=`<button class="wide" data-cmd="quit">SAVE &amp; QUIT TO TITLE</button>`;
     else h+=`<button class="wide gold" data-cmd="resume">BACK</button>`;
+    h+=`<button class="wide" data-cmd="exitgame">QUIT GAME</button>`;
     h+=`<p class="dim" style="font-size:16px">Your game saves automatically after every move.</p>`;
   }else if(tab==='sound'){
     h=`<h2>SOUND</h2>`+optRow('Master volume','',slider('master',0,100))+optRow('Music volume','',slider('music',0,100))+optRow('Effects volume','',slider('sfx',0,100))
@@ -1900,18 +1910,18 @@ function openMenu(tab){
       +optRow('Interface size',`Text and buttons${SET.ui?'':` (auto: ${pct(uiScale())}%)`}.`,cyc('ui',ui[1]))
       +optRow('Layout','Portrait puts controls below; wide puts them beside the view.',cyc('layout',lay[1]))
       +optRow('Screen flashes','Red hurt flash and spell flashes.',cyc('flash',SET.flash?'ON':'OFF'))
-      +(document.fullscreenEnabled?optRow('Fullscreen','Also F11 on a PC.',`<button data-cmd="fs">${document.fullscreenElement?'ON':'OFF'}</button>`):'');
+      +(document.fullscreenEnabled?optRow('Fullscreen','In Chrome/Edge, tap ESC for the menu and hold ESC to leave fullscreen. F11 also works.',`<button data-cmd="fs">${document.fullscreenElement?'ON':'OFF'}</button>`):'');
   }else if(tab==='controls'){
-    h=`<h2>CONTROLS</h2>`+optRow('Look sensitivity','Mouse, touch drag and controller look speed.',slider('look',25,300))+`<div class="keys">
-      <b>W A S D</b><span>Move and strafe</span><b>MOUSE</b><span>Look (click the view to lock the mouse; ESC frees it)</span><b>Q E / ARROWS</b><span>Turn</span>
-      <b>SPACE / CLICK</b><span>Attack (hold to keep swinging)</span><b>F / ENTER</b><span>Use, talk, open</span>
+    h=`<h2>CONTROLS</h2>`+optRow('Look sensitivity','Mouse, touch drag and controller look speed.',slider('look',25,300))+optRow('Invert up/down look','',cyc('invy',SET.invy?'ON':'OFF'))+`<div class="keys">
+      <b>W A S D</b><span>Move and strafe</span><b>MOUSE</b><span>Look around (click the view to lock the mouse; ESC frees it)</span><b>ARROWS</b><span>Move and turn</span>
+      <b>SPACE / CLICK</b><span>Attack (hold to keep swinging)</span><b>E</b><span>Use: open doors, talk, craft, take stairs (also F, ENTER)</span>
       <b>R</b><span>Cast readied spell</span><b>X</b><span>Sneak</span><b>C</b><span>Pick up</span><b>H</b><span>Drink potion</span>
-      <b>I</b><span>Pack</span><b>K</b><span>Character sheet</span><b>M</b><span>Map</span><b>L</b><span>Log</span><b>ESC</b><span>This menu</span></div>
-      <p class="dim" style="font-size:18px;text-align:left">Touch: the stick moves you; drag the view to look; tap the view or press ATTACK to strike.</p>`;
+      <b>I</b><span>Pack</span><b>K</b><span>Character sheet</span><b>M</b><span>Map</span><b>L</b><span>Log</span><b>ESC / P</b><span>This menu</span></div>
+      <p class="dim" style="font-size:18px;text-align:left">Touch: the stick moves you; drag the view to look around; tap the view or press ATTACK to strike; the USE button opens doors, talks and takes stairs.</p>`;
   }
   else if(tab==='saves')h=savesHTML();
   if(tab==='controls')h+=`<h3>CONTROLLER</h3><div class="keys">
-      <b>L-STICK</b><span>Move and strafe</span><b>R-STICK</b><span>Look</span><b>D-PAD</b><span>Move and turn</span><b>LB / RB</b><span>Strafe</span><b>A</b><span>Attack</span><b>B</b><span>Use, talk, open</span>
+      <b>L-STICK</b><span>Move and strafe</span><b>R-STICK</b><span>Look around</span><b>D-PAD</b><span>Move and turn</span><b>LB / RB</b><span>Strafe</span><b>A</b><span>Attack</span><b>B</b><span>Use: doors, people, stairs</span>
       <b>X</b><span>Cast readied spell</span><b>Y</b><span>Pack</span><b>RT</b><span>Drink potion</span><b>LT</b><span>Sneak</span>
       <b>BACK / VIEW</b><span>Map</span><b>L3 / R3</b><span>Spells / character</span><b>START</b><span>This menu</span></div>
       <p class="dim" style="font-size:18px;text-align:left">In menus: d-pad to move, A to choose, B to go back. PlayStation: A=Cross, B=Circle, X=Square, Y=Triangle.</p>`;
@@ -1982,18 +1992,28 @@ async function saveCmd(op,i){
 $('menubox').addEventListener('change',e=>{if(e.target.id!=='svfile'||!e.target.files[0])return;
   e.target.files[0].text().then(t=>{SV.code=t.trim();SV.msg='';SV.arm=false;openMenu('saves')})});
 
+function quitGame(){
+  if(H)save();hideAll();G=null;H=null;
+  try{window.close()}catch(e){}
+  // Browsers only let scripts close windows they opened; if we are still here, say it is safe to close.
+  setTimeout(()=>{showTitle();$('offline').innerHTML='<span class="good" style="font-size:20px">Progress saved. You can close this window or tab now.</span>'},250)}
 function cycleSet(k){
   const nxt=(list,cur)=>list[(list.findIndex(x=>x[0]===cur)+1)%list.length][0];
   if(k==='res')SET.res=nxt(RES,SET.res);
   else if(k==='ui')SET.ui=nxt(UIS,SET.ui);
   else if(k==='layout')SET.layout=nxt(LAYOUTS,SET.layout);
   else if(k==='flash')SET.flash=SET.flash?0:1;
+  else if(k==='invy')SET.invy=SET.invy?0:1;
   saveSet();applyVideo();openMenu(menuTab);
 }
+// In fullscreen, Chrome/Edge can hand Escape to the game (Keyboard Lock API): a tap opens the menu,
+// holding Escape leaves fullscreen. Other browsers always leave fullscreen on Escape (F11 avoids that on PCs).
+function lockEsc(){try{navigator.keyboard&&navigator.keyboard.lock&&navigator.keyboard.lock(['Escape']).catch(()=>{})}catch(e){}}
+document.addEventListener('fullscreenchange',()=>{if(document.fullscreenElement)lockEsc();else try{navigator.keyboard&&navigator.keyboard.unlock&&navigator.keyboard.unlock()}catch(e){}});
 function toggleFS(){
   const done=()=>setTimeout(()=>{applyVideo();if(menuTab==='video')openMenu('video')},150);
   if(document.fullscreenElement)document.exitFullscreen().then(done).catch(()=>{});
-  else document.documentElement.requestFullscreen().then(done).catch(()=>{});
+  else document.documentElement.requestFullscreen({navigationUI:'hide'}).then(()=>{lockEsc();done()}).catch(()=>{});
 }
 $('menubox').addEventListener('input',e=>{const k=e.target.dataset&&e.target.dataset.k;if(!k)return;
   SET[k]=e.target.value/100;const v=$('v_'+k);if(v)v.textContent=e.target.value+(e.target.dataset.suf||'%');
@@ -2019,9 +2039,9 @@ function padLoop(now){
     if(st[i]&&!padPrev[i]){padNext[i]=now+380;padPress(i)}
     else if(st[i]&&(PAD_REP[i]||i===0)&&now>=padNext[i]){padNext[i]=now+(REPEAT[PAD_REP[i]]||220);padPress(i,true)}}
   const ov=!!topOverlay(),dz=v=>Math.abs(v)<.2?0:v;
-  if(ov){IN.gx=IN.gy=IN.gt=0}else{
+  if(ov){IN.gx=IN.gy=IN.gt=IN.gp=0}else{
     IN.gx=dz(ax[0]||0)+(st[5]?1:0)-(st[4]?1:0);IN.gy=dz(ax[1]||0)+(b12(gp,12)?-1:0)+(b12(gp,13)?1:0);
-    IN.gt=dz(ax[2]||0)*(SET.look||1)+(b12(gp,15)?1:0)-(b12(gp,14)?1:0)}
+    IN.gt=dz(ax[2]||0)*(SET.look||1)+(b12(gp,15)?1:0)-(b12(gp,14)?1:0);IN.gp=-dz(ax[3]||0)*(SET.look||1)}
   padPrev=st;requestAnimationFrame(padLoop)}
 const b12=(gp,i)=>!!(gp.buttons[i]&&(gp.buttons[i].pressed||gp.buttons[i].value>.5));
 function padPress(i,rep){
