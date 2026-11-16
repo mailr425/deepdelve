@@ -959,7 +959,7 @@ const RES=[['retro','RETRO',120],['classic','CLASSIC',160],['sharp','SHARP',240]
 const RES_CAP=640*1000;   // max rendered pixels per frame (keeps big/4K screens smooth)
 const UIS=[[0,'AUTO'],[1,'100%'],[1.5,'150%'],[2,'200%']];
 const LAYOUTS=[['auto','AUTO'],['tall','PORTRAIT'],['wide','WIDE']];
-const SET={res:'classic',hud:'imm',fov:.74,look:1,invy:0,bright:1,ui:0,layout:'auto',flash:1,master:.9,music:.7,sfx:.8};
+const SET={res:matchMedia('(pointer:coarse)').matches?'hd':'native',fsStart:1,hud:'imm',fov:.74,look:1,invy:0,bright:1,ui:0,layout:'auto',flash:1,master:.9,music:.7,sfx:.8};
 try{Object.assign(SET,JSON.parse(localStorage.getItem(SET_KEY)||'{}'))}catch(e){}
 function saveSet(){try{localStorage.setItem(SET_KEY,JSON.stringify(SET))}catch(e){}}
 const uiScale=()=>SET.ui||(()=>{const k=Math.min(innerWidth/400,innerHeight/600);return k>=2?2:k>=1.5?1.5:1})();
@@ -2022,6 +2022,7 @@ function openMenu(tab){
       +optRow('HUD style','Modern: full-screen view with hotbar and compass. Classic: the original panel layout.',cyc('hud',SET.hud==='classic'?'CLASSIC':'MODERN'))
       +(SET.hud==='classic'?optRow('Layout','Portrait puts controls below; wide puts them beside the view.',cyc('layout',lay[1])):'')
       +optRow('Screen flashes','Red hurt flash and spell flashes.',cyc('flash',SET.flash?'ON':'OFF'))
+      +(document.fullscreenEnabled?optRow('Start in fullscreen','Goes fullscreen on your first click, tap or key press.',cyc('fsStart',SET.fsStart?'ON':'OFF')):'')
       +(document.fullscreenEnabled?optRow('Fullscreen','In Chrome/Edge, tap ESC for the menu and hold ESC to leave fullscreen. F11 also works.',`<button data-cmd="fs">${document.fullscreenElement?'ON':'OFF'}</button>`):'');
   }else if(tab==='controls'){
     h=`<h2>CONTROLS</h2>`+optRow('Look sensitivity','Mouse, touch drag and controller look speed.',slider('look',25,300))+optRow('Invert up/down look','',cyc('invy',SET.invy?'ON':'OFF'))+`<div class="keys">
@@ -2116,6 +2117,7 @@ function cycleSet(k){
   else if(k==='layout')SET.layout=nxt(LAYOUTS,SET.layout);
   else if(k==='flash')SET.flash=SET.flash?0:1;
   else if(k==='invy')SET.invy=SET.invy?0:1;
+  else if(k==='fsStart')SET.fsStart=SET.fsStart?0:1;
   else if(k==='hud')SET.hud=SET.hud==='classic'?'imm':'classic';
   saveSet();applyVideo();openMenu(menuTab);
 }
@@ -2123,6 +2125,11 @@ function cycleSet(k){
 // holding Escape leaves fullscreen. Other browsers always leave fullscreen on Escape (F11 avoids that on PCs).
 function lockEsc(){try{navigator.keyboard&&navigator.keyboard.lock&&navigator.keyboard.lock(['Escape']).catch(()=>{})}catch(e){}}
 document.addEventListener('fullscreenchange',()=>{if(document.fullscreenElement)lockEsc();else try{navigator.keyboard&&navigator.keyboard.unlock&&navigator.keyboard.unlock()}catch(e){}});
+// Start in fullscreen: browsers only allow it after a click, tap or key press, so the first one enters fullscreen.
+let fsTried=false;
+function autoFS(){if(fsTried||!SET.fsStart||!document.fullscreenEnabled||document.fullscreenElement)return;fsTried=true;
+  try{document.documentElement.requestFullscreen({navigationUI:'hide'}).then(()=>{lockEsc();setTimeout(applyVideo,150)}).catch(()=>{})}catch(e){}}
+['pointerdown','keydown'].forEach(ev=>document.addEventListener(ev,autoFS,true));
 function toggleFS(){
   const done=()=>setTimeout(()=>{applyVideo();if(menuTab==='video')openMenu('video')},150);
   if(document.fullscreenElement)document.exitFullscreen().then(done).catch(()=>{});
