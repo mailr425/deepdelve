@@ -97,6 +97,49 @@ body.wide #side{width:380px;display:flex;flex-direction:column;justify-content:f
 .opt .v{width:44px;text-align:right;color:var(--gold);font-family:var(--px);font-size:10px}
 .keys{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;text-align:left;font-size:20px;line-height:1em}
 .keys b{font-family:var(--px);font-size:10px;color:var(--gold);font-weight:normal;padding-top:4px}
+/* ===== Immersive HUD (body.imm): full-screen view, Skyrim/Minecraft-style overlay ===== */
+#ihud,#xhair,#cmpwrap,#tinfo,#lockhint{display:none}
+body.imm #app{display:block;padding:0}
+body.imm #view{position:fixed;inset:0;max-height:none;border:none;flex:none}
+body.imm #side{display:block;position:fixed;inset:0;width:auto;pointer-events:none;background:none;box-shadow:none;border:none;z-index:3}
+body.imm #hud,body.imm #mapwrap,body.imm #logjump{display:none!important}
+body.imm #log{position:absolute;left:14px;top:12px;width:min(48vw,440px);min-height:0;max-height:none;padding:0;background:none;box-shadow:none;border:none;overflow:hidden;pointer-events:none;font-size:20px;line-height:1.05em;text-shadow:2px 2px 0 #000,-1px -1px 0 #000}
+body.imm #log div{display:none;opacity:.92;transition:opacity 1.2s}
+body.imm #log div:nth-last-of-type(-n+6){display:block}
+body.imm #log div.old{opacity:0}
+body.imm #controls{position:absolute;left:0;right:0;bottom:0;background:none;box-shadow:none;border:none;pointer-events:none;justify-content:space-between;padding:10px 12px calc(12px + env(safe-area-inset-bottom))}
+body.imm #controls>*{pointer-events:auto}
+body.imm .acts button{opacity:.88}
+body.imm:not(.touch) #controls,body.imm:not(.touch) #sneakbtn{display:none}
+body.imm #sneakbtn{left:auto;right:12px;bottom:158px}
+body.imm.touch #sneakbtn{bottom:auto;top:96px}
+body.imm.touch #log{top:44px;width:calc(100vw - 100px)}
+body.imm.touch #tinfo{top:44px}
+body.imm #ihud{display:flex;position:absolute;left:50%;bottom:14px;transform:translateX(-50%);flex-direction:column;align-items:center;gap:4px;pointer-events:none;font-family:var(--px);font-size:10px;text-shadow:1px 1px 0 #000;zoom:var(--ui,1)}
+body.imm.touch #ihud{bottom:150px}
+#ibars{display:flex;align-items:center;gap:6px}
+#ibars .bar{width:150px;height:14px;margin:0}
+#ibars .bar span{position:absolute;inset:0;text-align:center;font-size:10px;line-height:11px;color:#fff}
+#imp>i{background:#3a6ad8;box-shadow:inset 0 2px 0 #7aa0f0,inset 0 -2px 0 #1c3a88}
+#ilv{color:#b8f080;min-width:22px;text-align:center}
+#ixp{width:318px;height:5px;background:#120c08;border:1px solid #000}#ixp>i{display:block;height:100%;width:0;background:#d8a830}
+#hotbar{display:flex;gap:2px;pointer-events:auto}
+#hotbar .hs{width:44px;height:44px;min-height:0;background:rgba(18,12,8,.74);border:2px solid #000;box-shadow:inset 2px 2px 0 rgba(255,255,255,.1),inset -2px -2px 0 rgba(0,0,0,.4);position:relative;padding:0}
+#hotbar .hs.sel{border-color:#ffd36a;box-shadow:0 0 0 2px #ffd36a}
+#hotbar .hs.wpn{border-color:#a04030}
+#hotbar .hs img{width:32px;height:32px;image-rendering:pixelated}
+#hotbar .hs .n{position:absolute;right:2px;bottom:1px;color:#fff;font-size:10px;text-shadow:1px 1px 0 #000}
+#hotbar .hs .k{position:absolute;left:3px;top:2px;color:#a89878;font-size:10px;text-shadow:1px 1px 0 #000}
+body.touch #hotbar .hs .k{display:none}
+body.imm #xhair{display:block;position:absolute;left:50%;top:50%;width:16px;height:16px;margin:-8px 0 0 -8px;pointer-events:none;opacity:.85}
+#xhair::before,#xhair::after{content:'';position:absolute;background:#fff;box-shadow:0 0 0 1px #000}
+#xhair::before{left:7px;top:0;width:2px;height:16px}#xhair::after{left:0;top:7px;width:16px;height:2px}
+body.imm #cmpwrap{display:block;position:absolute;left:50%;top:10px;transform:translateX(-50%);pointer-events:auto;zoom:var(--ui,1)}
+#cmp{display:block;width:300px;height:24px}
+body.imm #tinfo{display:block;position:absolute;right:14px;top:12px;font-family:var(--px);font-size:10px;text-align:right;line-height:1.6;text-shadow:1px 1px 0 #000;pointer-events:none;zoom:var(--ui,1)}
+#tinfo b{color:var(--gold);font-weight:normal}
+body.imm #bossbar{top:44px;bottom:auto;width:min(60%,420px)}
+body.imm #lockhint.on{display:block;position:absolute;left:50%;top:58%;transform:translateX(-50%);font-family:var(--px);font-size:10px;color:#ffd36a;background:rgba(0,0,0,.65);padding:8px 14px;pointer-events:none;zoom:var(--ui,1)}
 </style>
 </head>
 <body>
@@ -113,6 +156,11 @@ body.wide #side{width:380px;display:flex;flex-direction:column;justify-content:f
     <div id="mapwrap"><canvas id="mini"></canvas><span id="compass">N</span></div>
     <button id="sneakbtn" data-a="sneak"><img data-i="eye"><span>SNEAK</span></button>
     <div id="bossbar"><div id="bossname">BOSS</div><div class="bar"><i id="bossfill"></i></div></div>
+    <div id="xhair"></div>
+    <div id="cmpwrap"><canvas id="cmp" width="300" height="24"></canvas></div>
+    <div id="tinfo"></div>
+    <div id="lockhint">CLICK TO PLAY</div>
+    <div id="ihud"><div id="ibars"><div class="bar" id="ihp"><i></i><span></span></div><span id="ilv">1</span><div class="bar" id="imp"><i></i><span></span></div></div><div id="ixp"><i></i></div><div id="hotbar"></div></div>
   </div>
   <div id="side" class="panel">
     <div id="log" class="panel"></div>
@@ -622,9 +670,9 @@ function worldTick(){
   if(!G.dead&&G.turn%4===0)save();
   hud();dirty=true;
 }
-function log(t,c=''){if(!G)return;G.msgs.push([t,c]);if(G.msgs.length>150)G.msgs.shift();drawLog()}
+function log(t,c=''){if(!G)return;G.msgs.push([t,c,Date.now()]);if(G.msgs.length>150)G.msgs.shift();drawLog()}
 function drawLog(){const L=$('log'),atBottom=L.scrollTop+L.clientHeight>=L.scrollHeight-24;
-  L.innerHTML=G?G.msgs.map(([t,c],i,a)=>`<div class="${c}${i>=a.length-2?' new':''}">${t}</div>`).join('')+'<button id="logjump" data-cmd="logjump">LATEST</button>':'';
+  const nowT=Date.now();L.innerHTML=G?G.msgs.map(([t,c,ts],i,a)=>`<div class="${c}${i>=a.length-2?' new':''}${!ts||nowT-ts>9000?' old':''}">${t}</div>`).join('')+'<button id="logjump" data-cmd="logjump">LATEST</button>':'';
   if(atBottom||!G)L.scrollTop=L.scrollHeight;else $('logjump').style.display='block'}
 
 // ================= ACTIONS =================
@@ -902,13 +950,16 @@ const RES=[['retro','RETRO',120],['classic','CLASSIC',160],['sharp','SHARP',240]
 const RES_CAP=640*1000;   // max rendered pixels per frame (keeps big/4K screens smooth)
 const UIS=[[0,'AUTO'],[1,'100%'],[1.5,'150%'],[2,'200%']];
 const LAYOUTS=[['auto','AUTO'],['tall','PORTRAIT'],['wide','WIDE']];
-const SET={res:'classic',fov:.74,look:1,invy:0,bright:1,ui:0,layout:'auto',flash:1,master:.9,music:.7,sfx:.8};
+const SET={res:'classic',hud:'imm',fov:.74,look:1,invy:0,bright:1,ui:0,layout:'auto',flash:1,master:.9,music:.7,sfx:.8};
 try{Object.assign(SET,JSON.parse(localStorage.getItem(SET_KEY)||'{}'))}catch(e){}
 function saveSet(){try{localStorage.setItem(SET_KEY,JSON.stringify(SET))}catch(e){}}
 const uiScale=()=>SET.ui||(()=>{const k=Math.min(innerWidth/400,innerHeight/600);return k>=2?2:k>=1.5?1.5:1})();
 function applyVideo(){
   const wide=SET.layout==='wide'||(SET.layout==='auto'&&innerWidth>innerHeight*1.15);
   document.body.classList.toggle('wide',wide);
+  document.body.classList.toggle('imm',SET.hud!=='classic');
+  document.body.classList.toggle('touch',matchMedia('(pointer:coarse)').matches);
+  if(typeof hbSig!=='undefined'){hbSig='';cmpA=null}if(G)hud();
   document.documentElement.style.setProperty('--ui',uiScale());
   resize();
 }
@@ -1108,7 +1159,7 @@ function render(now){
   const bla=G.bl,bcols=(G.bpal||[]).map(hexC),inCamp=!!G.camp,skyOff=Math.round(((cam.a/(Math.PI*2))%1+1)%1*512);
   const k0=(.5-half)/F;
   for(let y=0;y<RH;y++){
-    const dy=y+.5-HZ,isF=dy>0,rd=(isF?-FLOORY:CEILY)*F/Math.abs(dy),L=(G.camp&&!isF)?1:light(rd),base=y*RW;
+    const dy=y+.5-HZ,isF=dy>0,rd=(isF?-FLOORY:CEILY)*F/Math.abs(dy),L=(G.camp&&!isF)?1:light(rd),base=y*RW,srr=Math.floor((1+dy/(RH/2))*SKY.Hh),sr=srr>=SKY.Hh?SKY.Hh-1:srr>=0?srr:(srr%48+48)%48;
     if(L<=0){buf.fill(BLACK,base,base+RW);continue}
     let wx=ex+rd*(fx+rx*k0),wy=ey+rd*(fy+ry*k0);const sx=rx*rd/F,sy=ry*rd/F;
     for(let x=0;x<RW;x++,wx+=sx,wy+=sy){
@@ -1117,7 +1168,7 @@ function render(now){
       if(isF){const inb=cx>=0&&cy>=0&&cx<MW&&cy<MH,ci=cy*MW+cx,c=inb?map[ci]:WALL;t=c===STAIRS?stairT:inCamp?TX.dirt:TX.floor;col=t.d[ty*32+tx];
         const bl=inb&&bla?bla[ci]:0;if(bl){const o=(ci*7)&31;if(BLOODM[bl-1][((ty+o)&31)*32+((tx+o*3)&31)]){const bc=bcols[G.blc[ci]]||0xff10108a;
           col=((255<<24)|((((col>>>16)&255)+((bc>>>16)&255)*3)>>2)<<16|((((col>>>8)&255)+((bc>>>8)&255)*3)>>2)<<8|(((col&255)+(bc&255)*3)>>2))>>>0}}}
-      else col=inCamp?SKY.d[Math.min(SKY.Hh-1,Math.floor(y*SKY.Hh/HZ))*SKY.W+((x+skyOff)&511)]:t.d[ty*32+tx];
+      else col=inCamp?SKY.d[sr*SKY.W+((x+skyOff)&511)]:t.d[ty*32+tx];
       buf[base+x]=shp(col,L,x,y);
     }
   }
@@ -1215,6 +1266,9 @@ function frame(now){
     if(FX.deaths.length)moving=true;
     const ease=(o,key,tgt)=>{const df=tgt-o[key];if(Math.abs(df)<.002)o[key]=tgt;else{o[key]+=df*k;moving=true}};
     if(rtUpdate(dt,now))moving=true;
+    if(document.body.classList.contains('imm')){drawCompass();
+      if((now/1000|0)!==(G._lt||0)){G._lt=now/1000|0;drawLog()}
+      const lh=$('lockhint'),want=!isTouch()&&playing()&&!locked();if(lh.classList.contains('on')!==want)lh.classList.toggle('on',want)}
     if(!G)return requestAnimationFrame(frame);
     cam.x=G.P.px-.5;cam.y=G.P.py-.5;cam.a=G.P.a;
     // monsters walk smoothly between tiles at the pace of the world clock
@@ -1241,8 +1295,42 @@ function hud(){
   if(b){$('bossbar').style.display='block';$('bossname').textContent=MONS[b.t].boss.toUpperCase();$('bossfill').style.width=(100*Math.max(0,b.hp)/b.maxhp)+'%'}
   else $('bossbar').style.display='none';
   drawMap($('mini'),15,true);
+  if(document.body.classList.contains('imm'))immHud();
   updateMusic();
 }
+// Immersive HUD: bars, level, XP, gold/floor and the hotbar (rebuilt only when its contents change).
+function hotbarSlots(){const sl=[{k:'w'},{k:'pot'}];if(!G||!G.camp)for(const S of SPELLS)if(sk(S.s)>=S.req)sl.push({k:'sp',S});return sl.slice(0,9)}
+let hbSig='';
+function immHud(){
+  const P=G.P,mh=maxHP(),mm=maxMP();
+  $('ihp').firstChild.style.width=(100*clamp(P.hp/mh,0,1))+'%';$('ihp').lastChild.textContent=`${P.hp}/${mh}`;
+  $('imp').firstChild.style.width=(100*clamp(P.mp/mm,0,1))+'%';$('imp').lastChild.textContent=`${P.mp}/${mm}`;
+  $('ilv').textContent=H.lvl;$('ixp').firstChild.style.width=(100*H.xp/xpNext(H.lvl))+'%';
+  $('tinfo').innerHTML=`${G.camp?'CAMP':'FLOOR '+G.depth}<br><b>${G.camp?H.bank:P.gold} G</b>${H.pp?`<br><span class="good">PERK POINT${H.pp>1?'S':''}: ${H.pp}</span>`:''}${P.sneak?'<br><span class="info">SNEAKING</span>':''}`;
+  const sl=hotbarSlots(),sig=JSON.stringify([gearIcon(H.weapon),H.weapon.ammo,H.potions,H.ready,P.mp,sl.map(x=>x.S?x.S.id:x.k)]);
+  if(sig===hbSig)return;hbSig=sig;
+  $('hotbar').innerHTML=sl.map((x,i)=>{let img,n='',cls='';
+    if(x.k==='w'){img=gearIcon(H.weapon);n=H.weapon.maxAmmo?(H.weapon.ammo??H.weapon.maxAmmo):'';cls='wpn'}
+    else if(x.k==='pot'){img=ICON.pot.u;n=H.potions}
+    else{img=ICON['sp_'+x.S.s].u;n=spellCost(x.S);if(H.ready===x.S.id)cls='sel';if(P.mp<spellCost(x.S))cls+=' dim'}
+    return`<button class="hs ${cls}" data-cmd="hb" data-i="${i}" title="${x.k==='w'?gname(H.weapon):x.k==='pot'?'Healing potion':x.S.n}"><span class="k">${i+1}</span><img src="${img}"><span class="n">${n}</span></button>`}).join('')}
+function hotbarUse(i){const x=hotbarSlots()[i];if(!x||!G||!playing())return;audio();
+  if(x.k==='pot')ACT.pot();
+  else if(x.k==='sp'){if(H.ready===x.S.id)ACT.cast();else{H.ready=x.S.id;log(`${x.S.n} readied. Right-click or R to cast.`,'info');hud()}}}
+// Compass strip (Skyrim-style): cardinal points scroll with your view; stairs and an awake guardian are marked.
+let cmpA=null;
+function drawCompass(){const c=$('cmp');if(!c||!G)return;const P=G.P,key=P.a.toFixed(3)+G.sealed+G.mons.length;if(key===cmpA)return;cmpA=key;
+  const g=c.getContext('2d'),W=c.width,H2=c.height,span=Math.PI*.9;g.clearRect(0,0,W,H2);
+  g.fillStyle='rgba(0,0,0,.55)';g.fillRect(0,4,W,H2-8);g.fillStyle='#5a4630';g.fillRect(0,4,W,2);g.fillRect(0,H2-6,W,2);
+  const pos=a=>{let d=((a-P.a)%(2*Math.PI)+3*Math.PI)%(2*Math.PI)-Math.PI;return Math.abs(d)>span/2?null:W/2+d/(span/2)*(W/2)};
+  g.textAlign='center';g.textBaseline='middle';
+  for(let i=0;i<24;i++){const a=i*Math.PI/12,x=pos(a);if(x==null)continue;const card=i%6===0,mid=i%3===0;
+    if(card){g.font='10px Delve,monospace';g.fillStyle=i===0?'#ff8a70':'#e8dcc0';g.fillText('NESW'[i/6],Math.round(x),H2/2+1)}
+    else{g.fillStyle=mid?'#a89878':'#6a5a48';g.fillRect(Math.round(x),mid?9:10,1,mid?6:4)}}
+  const mark=(tx,ty,col)=>{const x=pos(Math.atan2(tx+.5-P.px,-(ty+.5-P.py)));if(x==null)return;g.fillStyle='#000';g.fillRect(Math.round(x)-3,1,7,5);g.fillStyle=col;g.fillRect(Math.round(x)-2,2,5,3)};
+  if(!G.camp){for(let i=0;i<G.map.length;i++)if(G.map[i]===STAIRS&&G.seen[i]){mark(i%MW,Math.floor(i/MW),G.sealed?'#e03a30':'#7fc4ff');break}
+    const b=G.mons.find(m=>m.boss&&m.awake);if(b)mark(b.x,b.y,'#d070ff')}
+  g.fillStyle='#ffd36a';g.fillRect(W/2,4,1,3);g.fillRect(W/2,H2-7,1,3)}
 function drawMap(c,span,mini){
   const P=G.P,cs=6;c.width=c.height=span*cs;const g=c.getContext('2d');g.clearRect(0,0,c.width,c.height);
   const ox=mini?P.x-(span>>1):0,oy=mini?P.y-(span>>1):0;
@@ -1701,6 +1789,7 @@ document.addEventListener('click',e=>{
   if(c==='descend'){descend();return}
   if(c==='tocamp'){returnToCamp();return}
   if(c==='logjump'){const L=$('log');L.scrollTop=L.scrollHeight;return}
+  if(c==='hb'){hotbarUse(+b.dataset.i);return}
   if(c==='menu'){openMenu('main');return}
   if(c==='mtab'){if(b.dataset.t==='saves')Object.assign(SV,{mode:'list',code:'',msg:'',arm:false});openMenu(b.dataset.t);return}
   if(c==='sv'){saveCmd(b.dataset.op,+b.dataset.s);return}
@@ -1765,21 +1854,26 @@ document.querySelectorAll('[data-a]').forEach(b=>{
 });
 let drag=null;
 const VIEWEL=$('view'),locked=()=>document.pointerLockElement===VIEWEL;
-VIEWEL.addEventListener('pointerdown',e=>{if(e.target.closest('#sneakbtn'))return;e.preventDefault();audio();
-  if(e.target.closest('#mapwrap')){if(playing())openMap();return}
-  if(locked()){if(playing()&&e.button===0){mouseAtk=true;rtAttack()}return}
+VIEWEL.addEventListener('pointerdown',e=>{if(e.target.closest('#sneakbtn')||e.target.closest('#hotbar'))return;e.preventDefault();audio();
+  if(e.target.closest('#mapwrap')||e.target.closest('#cmpwrap')){if(playing())openMap();return}
+  if(locked()){if(playing()){if(e.button===0){mouseAtk=true;rtAttack()}else if(e.button===2)ACT.cast()}return}
   drag={id:e.pointerId,x:e.clientX,y:e.clientY,lx:e.clientX,moved:0,t:performance.now(),mouse:e.pointerType==='mouse'};
   try{VIEWEL.setPointerCapture(e.pointerId)}catch(err){}});
-VIEWEL.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;const dx=e.clientX-drag.lx,dy=e.clientY-(drag.ly??drag.y);drag.lx=e.clientX;drag.ly=e.clientY;
+VIEWEL.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id||drag.mouse)return;const dx=e.clientX-drag.lx,dy=e.clientY-(drag.ly??drag.y);drag.lx=e.clientX;drag.ly=e.clientY;
   drag.moved=Math.max(drag.moved,Math.hypot(e.clientX-drag.x,e.clientY-drag.y));if(playing()&&drag.moved>8){IN.look+=dx*.0065*(SET.look||1);IN.pitch-=dy*.0045*(SET.look||1)}});
 VIEWEL.addEventListener('pointerup',e=>{if(!drag||e.pointerId!==drag.id)return;const d=drag;drag=null;if(!playing())return;
-  if(d.moved<10&&performance.now()-d.t<400){
-    if(d.mouse&&VIEWEL.requestPointerLock&&!G.camp){try{VIEWEL.requestPointerLock()}catch(err){}}
-    tapView()}});
+  if(d.mouse){tryLock();return}
+  if(d.moved<10&&performance.now()-d.t<400)tapView()});
 VIEWEL.addEventListener('pointercancel',()=>drag=null);
 document.addEventListener('mouseup',()=>mouseAtk=false);
 document.addEventListener('mousemove',e=>{if(locked()&&playing()){IN.look+=e.movementX*.0026*(SET.look||1);IN.pitch-=e.movementY*.0026*(SET.look||1)}});
 let wasLocked=false;
+const isTouch=()=>document.body.classList.contains('touch');
+// On PCs the cursor only exists in menus: any click or key while playing captures the mouse again.
+function tryLock(){if(isTouch()||!G||!playing()||locked()||!VIEWEL.requestPointerLock)return;try{const r=VIEWEL.requestPointerLock();if(r&&r.catch)r.catch(()=>{})}catch(err){}}
+VIEWEL.addEventListener('contextmenu',e=>e.preventDefault());
+VIEWEL.addEventListener('wheel',e=>{if(!locked()||!playing())return;e.preventDefault();const sp=hotbarSlots().filter(x=>x.k==='sp');if(!sp.length)return;
+  let i=sp.findIndex(x=>x.S.id===H.ready);i=(i+(e.deltaY>0?1:-1)+sp.length)%sp.length;H.ready=sp[i].S.id;hud()},{passive:false});
 document.addEventListener('pointerlockchange',()=>{const l=locked();if(wasLocked&&!l&&G&&playing())openMenu('main');wasLocked=l});
 // virtual stick
 (()=>{const st=$('stick'),kn=$('knob');let pid=null,cx=0,cy=0;const R=46;
@@ -1804,11 +1898,15 @@ document.addEventListener('keydown',e=>{
   const k=e.key.toLowerCase();if(MOVEKEYS.includes(k)||k===' '){KEYS.add(k);if(playing())e.preventDefault();if(k!==' '||e.repeat)return}
   if(k==='p'&&!e.repeat&&(playing()||$('menuov').classList.contains('show'))){if($('menuov').classList.contains('show'))$('menuov').classList.remove('show');else openMenu('main');return}
   if(!playing())return;audio();
+  if(/^[1-9]$/.test(k)){hotbarUse(+k-1);return}
   const m={' ':'atk',e:'use',f:'use',enter:'use',h:'pot',i:'bag',m:'map',l:'log',c:'pick',r:'cast',x:'sneak',k:'char'};
   if(m[k]){e.preventDefault();ACT[m[k]]()}});
 
 document.addEventListener('keyup',e=>KEYS.delete(e.key.toLowerCase()));
+document.addEventListener('keydown',()=>setTimeout(tryLock,0));
 window.addEventListener('blur',()=>KEYS.clear());
+
+document.addEventListener('click',e=>{if(!e.target.closest('#view'))tryLock()});
 
 // ================= REAL-TIME MOVEMENT =================
 // The hero moves freely (P.px/P.py in tile units, P.a = view angle, 0 = north). P.x/P.y/P.dir still
@@ -1908,13 +2006,14 @@ function openMenu(tab){
       +optRow('Field of view','How wide you see. Wider shows more but shrinks things.',slider('fov',55,110,'°'))
       +optRow('Brightness','How far your torchlight reaches.',slider('bright',60,160))
       +optRow('Interface size',`Text and buttons${SET.ui?'':` (auto: ${pct(uiScale())}%)`}.`,cyc('ui',ui[1]))
-      +optRow('Layout','Portrait puts controls below; wide puts them beside the view.',cyc('layout',lay[1]))
+      +optRow('HUD style','Modern: full-screen view with hotbar and compass. Classic: the original panel layout.',cyc('hud',SET.hud==='classic'?'CLASSIC':'MODERN'))
+      +(SET.hud==='classic'?optRow('Layout','Portrait puts controls below; wide puts them beside the view.',cyc('layout',lay[1])):'')
       +optRow('Screen flashes','Red hurt flash and spell flashes.',cyc('flash',SET.flash?'ON':'OFF'))
       +(document.fullscreenEnabled?optRow('Fullscreen','In Chrome/Edge, tap ESC for the menu and hold ESC to leave fullscreen. F11 also works.',`<button data-cmd="fs">${document.fullscreenElement?'ON':'OFF'}</button>`):'');
   }else if(tab==='controls'){
     h=`<h2>CONTROLS</h2>`+optRow('Look sensitivity','Mouse, touch drag and controller look speed.',slider('look',25,300))+optRow('Invert up/down look','',cyc('invy',SET.invy?'ON':'OFF'))+`<div class="keys">
-      <b>W A S D</b><span>Move and strafe</span><b>MOUSE</b><span>Look around (click the view to lock the mouse; ESC frees it)</span><b>ARROWS</b><span>Move and turn</span>
-      <b>SPACE / CLICK</b><span>Attack (hold to keep swinging)</span><b>E</b><span>Use: open doors, talk, craft, take stairs (also F, ENTER)</span>
+      <b>W A S D</b><span>Move and strafe</span><b>MOUSE</b><span>Look around (the cursor only appears in menus)</span><b>ARROWS</b><span>Move and turn</span>
+      <b>LEFT CLICK / SPACE</b><span>Attack (hold to keep swinging)</span><b>RIGHT CLICK / R</b><span>Cast readied spell</span><b>1-9 / WHEEL</b><span>Hotbar: potion, ready a spell</span><b>E</b><span>Use: open doors, talk, craft, take stairs (also F, ENTER)</span>
       <b>R</b><span>Cast readied spell</span><b>X</b><span>Sneak</span><b>C</b><span>Pick up</span><b>H</b><span>Drink potion</span>
       <b>I</b><span>Pack</span><b>K</b><span>Character sheet</span><b>M</b><span>Map</span><b>L</b><span>Log</span><b>ESC / P</b><span>This menu</span></div>
       <p class="dim" style="font-size:18px;text-align:left">Touch: the stick moves you; drag the view to look around; tap the view or press ATTACK to strike; the USE button opens doors, talks and takes stairs.</p>`;
@@ -2004,6 +2103,7 @@ function cycleSet(k){
   else if(k==='layout')SET.layout=nxt(LAYOUTS,SET.layout);
   else if(k==='flash')SET.flash=SET.flash?0:1;
   else if(k==='invy')SET.invy=SET.invy?0:1;
+  else if(k==='hud')SET.hud=SET.hud==='classic'?'imm':'classic';
   saveSet();applyVideo();openMenu(menuTab);
 }
 // In fullscreen, Chrome/Edge can hand Escape to the game (Keyboard Lock API): a tap opens the menu,

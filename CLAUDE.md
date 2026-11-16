@@ -68,6 +68,11 @@ Facing codes are 0=N, 1=E, 2=S, 3=W, with `DX=[0,1,0,-1]` and `DY=[-1,0,1,0]`.
 - Attacks use per-weapon cooldowns (`weaponCD`, about one tick). Nothing happens on collision: doors, NPCs,
   stations, the gate and stairs are used with USE (E key, B on a controller, the USE button, or tapping the
   view). A prompt like `[E] OPEN` shows in the view when something is usable (`useMode`).
+- HUD: `body.imm` (default, `SET.hud`) is the modern full-screen layout: compass strip (`drawCompass`), crosshair,
+  fading notifications (the `#log` restyled), bars + XP + hotbar (`immHud`, `hotbarSlots`, `hotbarUse`; keys 1-9,
+  mouse wheel cycles spells, right-click casts). `body.touch` (coarse pointer) shows the stick and action buttons
+  over the view; on PCs the cursor only exists in menus (`tryLock` re-captures the mouse after any click/key while
+  playing). `SET.hud='classic'` restores the original panel layout.
 - Look up/down is a y-shear: the horizon `HZ` moves by `P.pitch*F` (clamped to `PITCH_MAX`).
 - Escape: in fullscreen started from the menu, Chrome/Edge's Keyboard Lock passes Escape to the game
   (hold Escape to leave fullscreen). Opening any overlay releases pointer lock (`show()`).
