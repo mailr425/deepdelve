@@ -643,7 +643,7 @@ function startRun(depth){
 }
 function enterFloor(){
   const f=genFloor(G.depth,(G.buff&&G.buff.chests)||0),P=G.P;
-  G.map=f.map;G.mons=f.mons;G.items=f.items;G.seen=new Array(MW*MH).fill(0);G.sealed=true;G.bl=null;G.bpal=[];ensureBlood();FX.parts=[];FX.deaths=[];
+  G.map=f.map;G.mons=f.mons;G.items=f.items;G.corpses=[];G.seen=new Array(MW*MH).fill(0);G.sealed=true;G.bl=null;G.bpal=[];ensureBlood();FX.parts=[];FX.deaths=[];
   P.x=f.x;P.y=f.y;P.dir=f.dir;P.turns=f.dir;
   for(const m of G.mons){m.vx=m.x;m.vy=m.y}
   H.deepest=Math.max(H.deepest,G.depth);
@@ -853,6 +853,8 @@ function kill(m){
   const M=MONS[m.t];if(!G.mons.includes(m))return;G.mons.splice(G.mons.indexOf(m),1);
   {const P=G.P,front=m.awake||M.s==='rat'||(DX[m.f||0]*(P.x-m.x)+DY[m.f||0]*(P.y-m.y))>0,f=front&&!m.sleep?'':'_b';
    FX.deaths.push({x:m.vx??m.x,y:m.vy??m.y,tex:m.boss?bossTex(M.s,f):MONTEX[M.s][f],sz:Math.min(1.1,M.sz*(m.boss?1.3:1)),t:performance.now(),float:!!M.float,flip:M.s==='rat'&&(DX[m.f||0]*Math.cos(cam.a)+DY[m.f||0]*Math.sin(cam.a))>0,dur:m.boss?1100:700});
+   if(!M.float){G.corpses=G.corpses||[];G.corpses.push({x:m.vx??m.x,y:m.vy??m.y,s:M.s,b:m.boss?1:0,f,fl:M.s==='rat'&&(DX[m.f||0]*Math.cos(cam.a)+DY[m.f||0]*Math.sin(cam.a))>0?1:0,t:Date.now()+(m.boss?1100:700)});
+     FX.deaths[FX.deaths.length-1].corpse=corpseTex(M.s,!!m.boss,f).k;if(G.corpses.length>60)G.corpses.shift()}
    spray(m,m.boss?30:16,true);addBlood(m.x,m.y,M.bl,m.boss?3:1)}H.kills++;G.kills++;SFX.kill();
   const gap=H.lvl-G.depth-BAL.xpFalloff,xp=Math.max(1,Math.round(M.xp*(1+.1*(m.lv||0))*(m.boss?5:1)*(gap>0?Math.max(.25,1-gap*.15):1)));H.xp+=xp;
   if(m.boss){
@@ -1155,6 +1157,23 @@ window.addEventListener('resize',()=>applyVideo());
 let LF=.155;function light(d){const v=1.2-d*LF/SET.bright;return v<=0?0:Math.pow(Math.min(1,v),1.4)}
 function hash3(a,b,c){let h=Math.imul(a,374761393)+Math.imul(b,668265263)+Math.imul(c+G.depth*7,2246822519);h=Math.imul(h^(h>>>13),1274126177);return(h^(h>>>16))>>>0}
 const BLACK=0xff000000>>>0;
+// Corpses: the monster's sprite laid down (rotated; rats and spiders flipped belly-up), darkened,
+// cropped to its own height so it rests on the floor. k = height factor vs the live sprite, wm = width boost.
+const CORPSE={};
+function corpseTex(key,boss,f){const id=key+(boss?'B':'')+(f||'');if(CORPSE[id])return CORPSE[id];
+  const src=boss?bossTex(key,f||''):MONTEX[key][f||''],W=src.w,Hh=src.h,flip=key==='rat'||key==='spider';
+  const rw=flip?W:Hh,rh=flip?Hh:W,d=new Uint32Array(rw*rh);
+  for(let y=0;y<Hh;y++)for(let x=0;x<W;x++){const c=src.d[y*W+x];if(!c)continue;
+    const nx=flip?x:Hh-1-y,ny=flip?Hh-1-y:x;
+    d[ny*rw+nx]=((255<<24)|((((c>>>16)&255)*.72)<<16)|((((c>>>8)&255)*.62)<<8)|((c&255)*.62))>>>0}
+  let top=rh,bot=-1;for(let y=0;y<rh;y++)for(let x=0;x<rw;x++)if(d[y*rw+x]){if(y<top)top=y;bot=y}
+  if(bot<0){top=0;bot=rh-1}const ch=bot-top+1,out=new Uint32Array(rw*ch);out.set(d.subarray(top*rw,(bot+1)*rw));
+  // Laid-down bodies are seen from above at a glance, so keep them low (about a third of standing height)
+  // and stretch the width back out to roughly the body's length.
+  const k=flip?Math.min(ch/Hh,.45):.4,wm=flip?(ch/Hh)/k:Math.min(2.6,ch/(k*rw));
+  return CORPSE[id]={tex:{w:rw,h:ch,d:out},k,wm}}
+// The camp sky is a fixed dome: 512 texels around (360 degrees), rows span 0..SKY_EL radians up.
+const SKY_EL=1.5;let SKYU=new Int32Array(0);
 function shp(col,L,x,y){const q=(L*NL+BAY[((y&3)<<2)|(x&3)])|0;if(q<=0)return BLACK;if(q>=NL)return col;const m=LEVM[q];
   return((255<<24)|((((col>>>16)&255)*m>>8)<<16)|((((col>>>8)&255)*m>>8)<<8)|((col&255)*m>>8))>>>0}
 function render(now){
@@ -1167,8 +1186,9 @@ function render(now){
   // floor & ceiling
   const bla=G.bl,bcols=(G.bpal||[]).map(hexC),inCamp=!!G.camp,skyOff=Math.round(((cam.a/(Math.PI*2))%1+1)%1*512);
   const k0=(.5-half)/F;
+  if(inCamp){if(SKYU.length!==RW)SKYU=new Int32Array(RW);for(let x=0;x<RW;x++)SKYU[x]=Math.round(Math.atan((x+.5-half)/F)*SKY.W/(2*Math.PI))}
   for(let y=0;y<RH;y++){
-    const dy=y+.5-HZ,isF=dy>0,rd=(isF?-FLOORY:CEILY)*F/Math.abs(dy),L=(G.camp&&!isF)?1:light(rd),base=y*RW,srr=Math.floor((1+dy/(RH/2))*SKY.Hh),sr=srr>=SKY.Hh?SKY.Hh-1:srr>=0?srr:(srr%48+48)%48;
+    const dy=y+.5-HZ,isF=dy>0,rd=(isF?-FLOORY:CEILY)*F/Math.abs(dy),L=(G.camp&&!isF)?1:light(rd),base=y*RW,srr=Math.floor(SKY.Hh-1-Math.atan2(-dy,F)/SKY_EL*SKY.Hh),sr=srr>=SKY.Hh?SKY.Hh-1:srr>=0?srr:(srr%48+48)%48;
     if(L<=0){buf.fill(BLACK,base,base+RW);continue}
     let wx=ex+rd*(fx+rx*k0),wy=ey+rd*(fy+ry*k0);const sx=rx*rd/F,sy=ry*rd/F;
     for(let x=0;x<RW;x++,wx+=sx,wy+=sy){
@@ -1177,7 +1197,7 @@ function render(now){
       if(isF){const inb=cx>=0&&cy>=0&&cx<MW&&cy<MH,ci=cy*MW+cx,c=inb?map[ci]:WALL;t=c===STAIRS?stairT:inCamp?TX.dirt:TX.floor;col=t.d[ty*32+tx];
         const bl=inb&&bla?bla[ci]:0;if(bl){const o=(ci*7)&31;if(BLOODM[bl-1][((ty+o)&31)*32+((tx+o*3)&31)]){const bc=bcols[G.blc[ci]]||0xff10108a;
           col=((255<<24)|((((col>>>16)&255)+((bc>>>16)&255)*3)>>2)<<16|((((col>>>8)&255)+((bc>>>8)&255)*3)>>2)<<8|(((col&255)+(bc&255)*3)>>2))>>>0}}}
-      else col=inCamp?SKY.d[sr*SKY.W+((x+skyOff)&511)]:t.d[ty*32+tx];
+      else col=inCamp?SKY.d[sr*SKY.W+((SKYU[x]+skyOff)&511)]:t.d[ty*32+tx];
       buf[base+x]=shp(col,L,x,y);
     }
   }
@@ -1208,7 +1228,11 @@ function render(now){
   for(const q of FX.parts)spr.push({x:q.x,y:q.y,tex:orbTex(q.c),sz:.05,lift:q.h,hp:1});
   FX.deaths=FX.deaths.filter(d=>now-d.t<d.dur);
   for(const d of FX.deaths){const k=(now-d.t)/d.dur,e=Math.min(1,k/.55);
+    if(d.corpse){const kb=k<.25?Math.sin(k/.25*Math.PI)*.06:0,te=k<.15?0:Math.min(1,(k-.15)/.85),fall=te*te;
+      spr.push({x:d.x+.5-fx*kb,y:d.y+.5-fy*kb,tex:d.tex,sz:d.sz*(1-(1-d.corpse)*fall),wmul:1+.45*fall,lift:k<.15?.04*Math.sin(k/.15*Math.PI):0,flash:k<.15,dark:fall*.5,hp:1,flip:d.flip});continue}
     spr.push({x:d.x+.5,y:d.y+.5,tex:d.tex,sz:d.float?d.sz:d.sz*(1-.7*e*e),wmul:d.float?1:1+.35*e,lift:d.float?.1+k*.6:0,flash:k<.18,fade:k>.45?(k-.45)/.55:0,dark:e,hp:1,flip:d.flip})}
+  if(G.corpses){const nowD=Date.now();for(const c of G.corpses){if(nowD<c.t)continue;const M=MONS.find(x=>x.s===c.s);if(!M)continue;const ct=corpseTex(c.s,!!c.b,c.f||'');
+    spr.push({x:c.x+.5,y:c.y+.5,tex:ct.tex,sz:Math.min(1.1,M.sz*(c.b?1.3:1))*ct.k,wmul:ct.wm,lift:0,hp:1,flip:!!c.fl,corpse:1})}}
   let boss=null;
   for(const m of G.mons){const M=MONS[m.t],lunge=m.atkT&&now-m.atkT<240?Math.sin((now-m.atkT)/240*Math.PI):0;
     spr.push({x:m.vx+.5-fx*lunge*.25,y:m.vy+.5-fy*lunge*.25,tex:(f=>m.boss?bossTex(M.s,f):MONTEX[M.s][f])((()=>{const idl=m.sleep?0:((Math.floor(now/480)+m.x+m.y)&1),mf=m.f||0,front=!m.sleep&&(m.awake||M.s==='rat'||(DX[mf]*(P.x-m.x)+DY[mf]*(P.y-m.y))>0);
