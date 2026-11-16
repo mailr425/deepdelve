@@ -1,0 +1,1376 @@
+{
+ "BAL": {
+  "mhp": 0.3,
+  "mdmg": 1.1,
+  "mhit": 0.7,
+  "mhitd": 0.008,
+  "nM0": 7,
+  "nMd": 1,
+  "nMmax": 22,
+  "hp0": 26,
+  "hpLvl": 6,
+  "bossHP": 2.4,
+  "bossDmg": 1.3,
+  "goldExp": 1.1,
+  "xpFalloff": 3,
+  "overE": 0.25,
+  "phit": 0.74,
+  "deepStart": 10,
+  "deepHp": 0.2,
+  "deepDmg": 1.5,
+  "deepHit": 0.015
+ },
+ "TIERS": [
+  {
+   "t": 1,
+   "m": "Iron",
+   "d": [
+    2,
+    6
+   ],
+   "a": 3
+  },
+  {
+   "t": 2,
+   "m": "Steel",
+   "d": [
+    2,
+    7
+   ],
+   "a": 4
+  },
+  {
+   "t": 3,
+   "m": "Tempered",
+   "d": [
+    3,
+    8
+   ],
+   "a": 5
+  },
+  {
+   "t": 4,
+   "m": "Fine",
+   "d": [
+    3,
+    10
+   ],
+   "a": 6
+  },
+  {
+   "t": 5,
+   "m": "Mithril",
+   "d": [
+    4,
+    12
+   ],
+   "a": 7
+  },
+  {
+   "t": 7,
+   "m": "Runed",
+   "d": [
+    6,
+    14
+   ],
+   "a": 9
+  },
+  {
+   "t": 9,
+   "m": "Dragonbone",
+   "d": [
+    8,
+    18
+   ],
+   "a": 11
+  },
+  {
+   "t": 11,
+   "m": "Adamant",
+   "d": [
+    10,
+    22
+   ],
+   "a": 13
+  },
+  {
+   "t": 13,
+   "m": "Void",
+   "d": [
+    12,
+    26
+   ],
+   "a": 15
+  }
+ ],
+ "WTYPES": {
+  "sword": {
+   "n": "Sword",
+   "dm": 1,
+   "hit": 0,
+   "crit": 0
+  },
+  "axe": {
+   "n": "Axe",
+   "dm": 1.12,
+   "hit": -0.04,
+   "crit": 0
+  },
+  "blunt": {
+   "n": "Mace",
+   "dm": 1.05,
+   "hit": 0,
+   "crit": 0
+  },
+  "dagger": {
+   "n": "Dagger",
+   "dm": 0.8,
+   "hit": 0.05,
+   "crit": 0.1,
+   "sneak": 2.5
+  },
+  "spear": {
+   "n": "Spear",
+   "dm": 1,
+   "hit": 0.03,
+   "crit": 0
+  },
+  "martial": {
+   "n": "Cestus",
+   "dm": 0.78,
+   "hit": 0.08,
+   "crit": 0.05
+  },
+  "bow": {
+   "n": "Bow",
+   "dm": 0.95,
+   "hit": 0,
+   "crit": 0.03,
+   "range": 6,
+   "two": 1,
+   "sneak": 2
+  },
+  "thrown": {
+   "n": "Javelins",
+   "dm": 0.8,
+   "hit": 0,
+   "crit": 0.05,
+   "range": 4,
+   "sneak": 2,
+   "ammo": 5
+  }
+ },
+ "WVAR": {
+  "thrown": {
+   "javelin": {
+    "n": "Javelins",
+    "one": "javelin",
+    "dm": 0.8,
+    "ammo": 5,
+    "range": 4,
+    "crit": 0.05
+   },
+   "knife": {
+    "n": "Throwing Knives",
+    "one": "throwing knife",
+    "dm": 0.62,
+    "ammo": 8,
+    "range": 4,
+    "crit": 0.14
+   },
+   "shuriken": {
+    "n": "Shurikens",
+    "one": "shuriken",
+    "dm": 0.5,
+    "ammo": 10,
+    "range": 5,
+    "crit": 0.1,
+    "bleed": 0.25
+   }
+  },
+  "martial": {
+   "cestus": {
+    "n": "Cestus",
+    "dm": 0.78,
+    "hit": 0.08,
+    "crit": 0.05,
+    "disc": 1
+   },
+   "wraps": {
+    "n": "Handwraps",
+    "dm": 0.62,
+    "hit": 0.12,
+    "crit": 0.06,
+    "dodge": 0.05,
+    "double": 0.2,
+    "disc": 1
+   },
+   "bo": {
+    "n": "Bo Staff",
+    "dm": 0.92,
+    "hit": 0.06,
+    "crit": 0.04,
+    "two": 1,
+    "dodge": 0.04,
+    "stun": 0.1,
+    "disc": 1
+   }
+  },
+  "blunt": {
+   "mace": {
+    "n": "Mace"
+   },
+   "cleric": {
+    "n": "Cleric's Mace",
+    "dm": 0.95,
+    "sp": {
+     "holy": 0.2
+    },
+    "mp": 0.1
+   },
+   "staff": {
+    "n": "Wizard Staff",
+    "dm": 0.8,
+    "two": 1,
+    "sp": {
+     "arcane": 0.2
+    },
+    "mp": 0.2
+   }
+  }
+ },
+ "ATYPES": {
+  "cloth": {
+   "n": [
+    "Robe",
+    "Vestments"
+   ],
+   "am": 0.35
+  },
+  "leather": {
+   "n": [
+    "Jerkin",
+    "Brigandine"
+   ],
+   "am": 0.65
+  },
+  "metal": {
+   "n": [
+    "Chainmail",
+    "Plate"
+   ],
+   "am": 1
+  }
+ },
+ "ATRAIT": {
+  "gi": "+6% dodge, +8% melee damage, full dodge",
+  "cloth": "+15% mana, faster mana regen, full dodge",
+  "leather": "75% dodge",
+  "metal": "35% dodge, -25 stealth, sneaking is harder"
+ },
+ "MATS": {
+  "cloth": [
+   "Linen",
+   "Wool",
+   "Quilted",
+   "Silk",
+   "Spidersilk",
+   "Runeweave",
+   "Dragonsilk",
+   "Starweave",
+   "Voidweave"
+  ],
+  "leather": [
+   "Rawhide",
+   "Tanned",
+   "Hardened",
+   "Studded",
+   "Drakeskin",
+   "Runed",
+   "Dragonhide",
+   "Shadowhide",
+   "Voidhide"
+  ],
+  "bow": [
+   "Ash",
+   "Yew",
+   "Ironwood",
+   "Horn",
+   "Elderwood",
+   "Runed",
+   "Dragonbone",
+   "Starwood",
+   "Void"
+  ],
+  "shield": [
+   "Oak",
+   "Iron",
+   "Steel",
+   "Tempered",
+   "Mithril",
+   "Runed",
+   "Dragonbone",
+   "Adamant",
+   "Void"
+  ]
+ },
+ "SHIELDS": [
+  {
+   "t": 1,
+   "n": "Buckler",
+   "b": 0.1
+  },
+  {
+   "t": 4,
+   "n": "Kite Shield",
+   "b": 0.15
+  },
+  {
+   "t": 8,
+   "n": "Tower Shield",
+   "b": 0.2
+  },
+  {
+   "t": 12,
+   "n": "Aegis",
+   "b": 0.25
+  }
+ ],
+ "AFFIX": {
+  "pre": [
+   {
+    "k": "flame",
+    "n": "Flaming",
+    "on": "w",
+    "v": "2+floor(t*0.8)"
+   },
+   {
+    "k": "keen",
+    "n": "Keen",
+    "on": "w",
+    "v": "5+t"
+   },
+   {
+    "k": "vicious",
+    "n": "Vicious",
+    "on": "w",
+    "v": "10+t*2"
+   },
+   {
+    "k": "sturdy",
+    "n": "Sturdy",
+    "on": "as",
+    "v": "1+floor(t/3)"
+   },
+   {
+    "k": "shadow",
+    "n": "Shadowed",
+    "on": "a",
+    "v": "8+t*2"
+   },
+   {
+    "k": "blessed",
+    "n": "Blessed",
+    "on": "aw",
+    "v": "8+t*2"
+   }
+  ],
+  "suf": [
+   {
+    "k": "bear",
+    "n": "of the Bear",
+    "on": "was",
+    "v": "6+t*2"
+   },
+   {
+    "k": "fox",
+    "n": "of the Fox",
+    "on": "was",
+    "v": "3+floor(t/2)"
+   },
+   {
+    "k": "owl",
+    "n": "of the Owl",
+    "on": "was",
+    "v": "5+t*2"
+   },
+   {
+    "k": "leech",
+    "n": "of Leeching",
+    "on": "w",
+    "v": "1+floor(t/4)"
+   },
+   {
+    "k": "ward",
+    "n": "of Warding",
+    "on": "as",
+    "v": "1+floor(t/3)"
+   }
+  ]
+ },
+ "SKILLS": {
+  "sword": "Sword",
+  "axe": "Axe",
+  "blunt": "Blunt",
+  "dagger": "Dagger",
+  "spear": "Spear",
+  "martial": "Martial",
+  "bow": "Bow",
+  "thrown": "Thrown",
+  "cloth": "Cloth",
+  "leather": "Leather",
+  "metal": "Metal",
+  "stealth": "Stealth",
+  "ranged": "Ranged",
+  "block": "Block",
+  "melee": "Melee",
+  "dodge": "Dodge",
+  "holy": "Holy",
+  "nature": "Nature",
+  "arcane": "Arcane",
+  "smith": "Blacksmithing",
+  "leatherwork": "Leatherworking",
+  "tailor": "Tailoring",
+  "fletch": "Woodworking",
+  "alchemy": "Alchemy",
+  "enchant": "Enchanting",
+  "spellcraft": "Spellcraft"
+ },
+ "CRAFT_SK": [
+  "smith",
+  "leatherwork",
+  "tailor",
+  "fletch",
+  "alchemy",
+  "enchant",
+  "spellcraft"
+ ],
+ "PERKS": {
+  "sword": [
+   [
+    "Riposte",
+    "20% chance to counter when a foe misses you"
+   ],
+   [
+    "Flurry",
+    "15% chance to strike twice"
+   ]
+  ],
+  "axe": [
+   [
+    "Rend",
+    "30% chance to make foes bleed"
+   ],
+   [
+    "Cleave",
+    "Hits also strike foes beside your target"
+   ]
+  ],
+  "blunt": [
+   [
+    "Bonebreaker",
+    "+50% damage to undead"
+   ],
+   [
+    "Concuss",
+    "20% chance to stun for a turn"
+   ]
+  ],
+  "dagger": [
+   [
+    "Backstab",
+    "Dagger sneak attacks deal x3.5 damage (from x2.5)"
+   ],
+   [
+    "Lacerate",
+    "+10% crit, crits cause bleeding"
+   ]
+  ],
+  "spear": [
+   [
+    "Reach",
+    "Attack foes two tiles away"
+   ],
+   [
+    "Impale",
+    "+25% damage to guardians"
+   ]
+  ],
+  "martial": [
+   [
+    "Flowing",
+    "+10% dodge with martial weapons"
+   ],
+   [
+    "Pressure Point",
+    "20% chance to stun"
+   ]
+  ],
+  "bow": [
+   [
+    "Eagle Eye",
+    "+2 range and +10% hit"
+   ],
+   [
+    "Piercing Shot",
+    "Arrows hit every foe in line"
+   ]
+  ],
+  "thrown": [
+   [
+    "Ricochet",
+    "30% chance to hit a second foe"
+   ],
+   [
+    "Deadly Aim",
+    "+15% crit with thrown"
+   ]
+  ],
+  "cloth": [
+   [
+    "Arcane Weave",
+    "+20% max mana"
+   ],
+   [
+    "Mana Shield",
+    "25% of damage drains mana instead"
+   ]
+  ],
+  "leather": [
+   [
+    "Nimble",
+    "+5% dodge in leather"
+   ],
+   [
+    "Second Wind",
+    "Once per floor, heal 30% when near death"
+   ]
+  ],
+  "metal": [
+   [
+    "Reinforced",
+    "+2 armor in metal"
+   ],
+   [
+    "Bulwark",
+    "Take 2 less damage per hit in metal"
+   ]
+  ],
+  "stealth": [
+   [
+    "Shadowstep",
+    "Foes notice you 2 tiles later"
+   ],
+   [
+    "Assassinate",
+    "Sneak attacks always crit"
+   ]
+  ],
+  "ranged": [
+   [
+    "Steady Aim",
+    "+10% ranged hit"
+   ],
+   [
+    "Volley",
+    "20% chance for an extra shot"
+   ]
+  ],
+  "block": [
+   [
+    "Shield Wall",
+    "+10% block chance"
+   ],
+   [
+    "Shield Bash",
+    "Blocking stuns the attacker"
+   ]
+  ],
+  "melee": [
+   [
+    "Brawler",
+    "+1 melee damage"
+   ],
+   [
+    "Bloodlust",
+    "Heal 3 HP per kill"
+   ]
+  ],
+  "dodge": [
+   [
+    "Evasion",
+    "+8% dodge"
+   ],
+   [
+    "Counter",
+    "Dodging gives a 50% chance to strike back"
+   ]
+  ],
+  "holy": [
+   [
+    "Devotion",
+    "Heal is 50% stronger"
+   ],
+   [
+    "Sanctify",
+    "Smite stuns undead"
+   ]
+  ],
+  "nature": [
+   [
+    "Thorns",
+    "Attackers take 2 damage"
+   ],
+   [
+    "Wild Growth",
+    "Regrowth and Entangle last twice as long"
+   ]
+  ],
+  "arcane": [
+   [
+    "Efficiency",
+    "Arcane spells cost 25% less"
+   ],
+   [
+    "Arcane Surge",
+    "15% chance for double spell damage"
+   ]
+  ],
+  "smith": [
+   [
+    "Thrifty Smith",
+    "Forge recipes use 25% less ore"
+   ],
+   [
+    "Masterwork",
+    "Forged gear gets +1 and better odds of magic"
+   ]
+  ],
+  "leatherwork": [
+   [
+    "Thrifty Tanner",
+    "Leather recipes use 25% less hide"
+   ],
+   [
+    "Masterwork",
+    "Leather gear gets +1 and better odds of magic"
+   ]
+  ],
+  "tailor": [
+   [
+    "Thrifty Weaver",
+    "Loom recipes use 25% less cloth"
+   ],
+   [
+    "Masterwork",
+    "Cloth gear gets +1 and better odds of magic"
+   ]
+  ],
+  "fletch": [
+   [
+    "Thrifty Woodworker",
+    "Wood recipes use 25% less wood"
+   ],
+   [
+    "Masterwork",
+    "Bows and staves get +1 and better odds of magic"
+   ]
+  ],
+  "alchemy": [
+   [
+    "Potent Brews",
+    "Your potions heal 50% more"
+   ],
+   [
+    "Double Batch",
+    "30% chance to brew twice"
+   ]
+  ],
+  "enchant": [
+   [
+    "Dust Saver",
+    "Enchanting costs 25% less dust"
+   ],
+   [
+    "Deep Magic",
+    "Enchantments roll stronger bonuses"
+   ]
+  ],
+  "spellcraft": [
+   [
+    "Thrifty Scribe",
+    "Empowering costs 25% less dust"
+   ],
+   [
+    "Arcane Mastery",
+    "Empowered spells cost 1 less mana"
+   ]
+  ]
+ },
+ "SPELLS": [
+  {
+   "id": "heal",
+   "sn": "HEAL",
+   "n": "Heal",
+   "s": "holy",
+   "req": 0,
+   "mp": 5,
+   "d": "Restore health",
+   "c": "#ffe080"
+  },
+  {
+   "id": "smite",
+   "sn": "SMITE",
+   "n": "Smite",
+   "s": "holy",
+   "req": 15,
+   "mp": 6,
+   "d": "Holy bolt, double damage to undead",
+   "c": "#fff4b0"
+  },
+  {
+   "id": "ward",
+   "sn": "WARD",
+   "n": "Ward",
+   "s": "holy",
+   "req": 30,
+   "mp": 8,
+   "d": "A barrier that absorbs damage",
+   "c": "#ffe080"
+  },
+  {
+   "id": "thorn",
+   "sn": "THORNS",
+   "n": "Thornlash",
+   "s": "nature",
+   "req": 0,
+   "mp": 4,
+   "d": "Lash the foe ahead and make it bleed",
+   "c": "#80e060"
+  },
+  {
+   "id": "entangle",
+   "sn": "ROOTS",
+   "n": "Entangle",
+   "s": "nature",
+   "req": 15,
+   "mp": 6,
+   "d": "Roots hold a foe in place",
+   "c": "#60c040"
+  },
+  {
+   "id": "regrow",
+   "sn": "REGROW",
+   "n": "Regrowth",
+   "s": "nature",
+   "req": 30,
+   "mp": 8,
+   "d": "Heal a little every turn",
+   "c": "#80e060"
+  },
+  {
+   "id": "missile",
+   "sn": "MISSILE",
+   "n": "Magic Missile",
+   "s": "arcane",
+   "req": 0,
+   "mp": 4,
+   "d": "A bolt that never misses",
+   "c": "#c080ff"
+  },
+  {
+   "id": "frost",
+   "sn": "FROST",
+   "n": "Frost Bolt",
+   "s": "arcane",
+   "req": 15,
+   "mp": 7,
+   "d": "Damage and slow a foe",
+   "c": "#80d0ff"
+  },
+  {
+   "id": "blink",
+   "sn": "BLINK",
+   "n": "Blink",
+   "s": "arcane",
+   "req": 30,
+   "mp": 6,
+   "d": "Teleport up to 4 tiles ahead",
+   "c": "#c080ff"
+  }
+ ],
+ "MONS": [
+  {
+   "n": "rat",
+   "bl": "#8a1410",
+   "s": "rat",
+   "hp": 6,
+   "dmg": [
+    1,
+    3
+   ],
+   "def": 0,
+   "xp": 4,
+   "min": 1,
+   "max": 3,
+   "w": 3,
+   "sz": 0.36,
+   "boss": "The Rat King"
+  },
+  {
+   "n": "giant spider",
+   "bl": "#4a8a20",
+   "s": "spider",
+   "hp": 9,
+   "dmg": [
+    2,
+    4
+   ],
+   "def": 1,
+   "xp": 7,
+   "min": 1,
+   "max": 4,
+   "w": 3,
+   "sz": 0.6,
+   "boss": "The Broodmother"
+  },
+  {
+   "n": "goblin",
+   "bl": "#8a1410",
+   "s": "goblin",
+   "hp": 11,
+   "dmg": [
+    2,
+    5
+   ],
+   "def": 1,
+   "xp": 10,
+   "min": 1,
+   "max": 6,
+   "w": 3,
+   "sz": 0.68,
+   "opens": 1,
+   "boss": "Goblin Warchief"
+  },
+  {
+   "n": "skeleton",
+   "bl": "#c8c0a8",
+   "s": "skeleton",
+   "hp": 15,
+   "dmg": [
+    2,
+    6
+   ],
+   "def": 2,
+   "xp": 15,
+   "min": 2,
+   "max": 8,
+   "w": 3,
+   "sz": 0.85,
+   "opens": 1,
+   "undead": 1,
+   "boss": "The Bone Lord"
+  },
+  {
+   "n": "zombie",
+   "bl": "#2a3418",
+   "s": "zombie",
+   "hp": 22,
+   "dmg": [
+    3,
+    7
+   ],
+   "def": 1,
+   "xp": 18,
+   "min": 3,
+   "max": 9,
+   "w": 2,
+   "sz": 0.78,
+   "slow": 1,
+   "undead": 1,
+   "boss": "The Bloated One"
+  },
+  {
+   "n": "orc",
+   "bl": "#7a1010",
+   "s": "orc",
+   "hp": 26,
+   "dmg": [
+    3,
+    9
+   ],
+   "def": 3,
+   "xp": 26,
+   "min": 4,
+   "max": 12,
+   "w": 3,
+   "sz": 0.84,
+   "opens": 1,
+   "boss": "Orc Warlord"
+  },
+  {
+   "n": "wraith",
+   "bl": "#7090d0",
+   "s": "wraith",
+   "hp": 24,
+   "dmg": [
+    4,
+    10
+   ],
+   "def": 4,
+   "xp": 32,
+   "min": 5,
+   "max": 99,
+   "w": 2,
+   "sz": 0.8,
+   "float": 1,
+   "opens": 1,
+   "undead": 1,
+   "boss": "The Wailing Queen"
+  },
+  {
+   "n": "troll",
+   "bl": "#6a1410",
+   "s": "troll",
+   "hp": 42,
+   "dmg": [
+    5,
+    12
+   ],
+   "def": 4,
+   "xp": 48,
+   "min": 6,
+   "max": 99,
+   "w": 2,
+   "sz": 0.95,
+   "opens": 1,
+   "boss": "Troll Chieftain"
+  },
+  {
+   "n": "dragon",
+   "bl": "#901808",
+   "s": "dragon",
+   "hp": 80,
+   "dmg": [
+    8,
+    18
+   ],
+   "def": 6,
+   "xp": 150,
+   "min": 8,
+   "max": 99,
+   "w": 0.5,
+   "sz": 1,
+   "boss": "The Ancient Wyrm"
+  }
+ ],
+ "STATIONS": {
+  "forge": {
+   "n": "The Forge",
+   "sk": "smith",
+   "mat": "ore",
+   "d": "Hammer ore into weapons, armor and shields. You can also salvage unwanted gear here.",
+   "r": [
+    [
+     "Sword",
+     {
+      "kind": "w",
+      "wt": "sword"
+     },
+     3
+    ],
+    [
+     "Axe",
+     {
+      "kind": "w",
+      "wt": "axe"
+     },
+     3
+    ],
+    [
+     "Mace",
+     {
+      "kind": "w",
+      "wt": "blunt",
+      "var": "mace"
+     },
+     3
+    ],
+    [
+     "Cleric's Mace",
+     {
+      "kind": "w",
+      "wt": "blunt",
+      "var": "cleric"
+     },
+     3
+    ],
+    [
+     "Dagger",
+     {
+      "kind": "w",
+      "wt": "dagger"
+     },
+     2
+    ],
+    [
+     "Spear",
+     {
+      "kind": "w",
+      "wt": "spear"
+     },
+     3
+    ],
+    [
+     "Cestus",
+     {
+      "kind": "w",
+      "wt": "martial",
+      "var": "cestus"
+     },
+     2
+    ],
+    [
+     "Javelins",
+     {
+      "kind": "w",
+      "wt": "thrown",
+      "var": "javelin"
+     },
+     3
+    ],
+    [
+     "Throwing Knives",
+     {
+      "kind": "w",
+      "wt": "thrown",
+      "var": "knife"
+     },
+     2
+    ],
+    [
+     "Shurikens",
+     {
+      "kind": "w",
+      "wt": "thrown",
+      "var": "shuriken"
+     },
+     2
+    ],
+    [
+     "Metal Armor",
+     {
+      "kind": "a",
+      "at": "metal"
+     },
+     5
+    ],
+    [
+     "Shield",
+     {
+      "kind": "s"
+     },
+     4
+    ]
+   ]
+  },
+  "tanner": {
+   "n": "Tanning Rack",
+   "sk": "leatherwork",
+   "mat": "hide",
+   "d": "Stretch and cure hides into leather armor.",
+   "r": [
+    [
+     "Leather Armor",
+     {
+      "kind": "a",
+      "at": "leather"
+     },
+     4
+    ]
+   ]
+  },
+  "loom": {
+   "n": "The Loom",
+   "sk": "tailor",
+   "mat": "cloth",
+   "d": "Weave caster robes, fighting gis and handwraps.",
+   "r": [
+    [
+     "Robe",
+     {
+      "kind": "a",
+      "at": "cloth",
+      "var": null
+     },
+     4
+    ],
+    [
+     "Gi",
+     {
+      "kind": "a",
+      "at": "cloth",
+      "var": "gi"
+     },
+     4
+    ],
+    [
+     "Handwraps",
+     {
+      "kind": "w",
+      "wt": "martial",
+      "var": "wraps"
+     },
+     2
+    ]
+   ]
+  },
+  "fletcher": {
+   "n": "Woodworking Bench",
+   "sk": "fletch",
+   "mat": "wood",
+   "d": "Carve staves (bo staffs and wizard staffs) and shape bows.",
+   "r": [
+    [
+     "Bo Staff",
+     {
+      "kind": "w",
+      "wt": "martial",
+      "var": "bo"
+     },
+     3
+    ],
+    [
+     "Wizard Staff",
+     {
+      "kind": "w",
+      "wt": "blunt",
+      "var": "staff"
+     },
+     3
+    ],
+    [
+     "Bow",
+     {
+      "kind": "w",
+      "wt": "bow"
+     },
+     3
+    ]
+   ]
+  },
+  "alchemy": {
+   "n": "Alchemy Table",
+   "sk": "alchemy",
+   "d": "Brew potions, and elixirs that last one floor."
+  },
+  "enchant": {
+   "n": "Enchanting Altar",
+   "sk": "enchant",
+   "d": "Bind arcane dust into your gear."
+  },
+  "lectern": {
+   "n": "Spellcraft Lectern",
+   "sk": "spellcraft",
+   "d": "Permanently empower the spells you know."
+  }
+ },
+ "MATCAT": {
+  "ore": {
+   "n": [
+    "Iron Ore",
+    "Steel Bar",
+    "Tempered Bar",
+    "Fine Steel Bar",
+    "Mithril Ore",
+    "Runic Ore",
+    "Dragonbone Shard",
+    "Adamant Ore",
+    "Void Shard"
+   ]
+  },
+  "hide": {
+   "n": [
+    "Rawhide",
+    "Tanned Hide",
+    "Hardened Hide",
+    "Studded Hide",
+    "Drakeskin Hide",
+    "Runed Hide",
+    "Dragonhide Hide",
+    "Shadowhide Hide",
+    "Voidhide Hide"
+   ]
+  },
+  "cloth": {
+   "n": [
+    "Linen Bolt",
+    "Wool Bolt",
+    "Quilted Bolt",
+    "Silk Bolt",
+    "Spidersilk Bolt",
+    "Runeweave Bolt",
+    "Dragonsilk Bolt",
+    "Starweave Bolt",
+    "Voidweave Bolt"
+   ]
+  },
+  "wood": {
+   "n": [
+    "Ash Wood",
+    "Yew Wood",
+    "Ironwood",
+    "Horn",
+    "Elderwood",
+    "Runed Wood",
+    "Dragonbone",
+    "Starwood",
+    "Void Wood"
+   ]
+  },
+  "herb": {
+   "n": [
+    "Herbs"
+   ]
+  },
+  "dust": {
+   "n": [
+    "Arcane Dust"
+   ]
+  }
+ },
+ "ELIXIRS": [
+  {
+   "k": "dmg",
+   "n": "Elixir of Might",
+   "d": "+25% damage next floor",
+   "v": 0.25
+  },
+  {
+   "k": "armor",
+   "n": "Stoneskin Draught",
+   "d": "+3 armor next floor",
+   "v": 3
+  },
+  {
+   "k": "stealth",
+   "n": "Shadow Draught",
+   "d": "+30 stealth next floor",
+   "v": 30
+  },
+  {
+   "k": "gold",
+   "n": "Elixir of Fortune",
+   "d": "+50% gold next floor",
+   "v": 0.5
+  },
+  {
+   "k": "hp",
+   "n": "Troll Blood",
+   "d": "+25% max HP next floor",
+   "v": 0.25
+  }
+ ],
+ "MERCH": {
+  "weaponsmith": {
+   "n": "Weaponsmith",
+   "npc": "weaponsmith",
+   "d": "Blades, bows and hafted steel."
+  },
+  "armorer": {
+   "n": "Armorer",
+   "npc": "armorer",
+   "d": "Armor and shields for every style."
+  },
+  "alchemist": {
+   "n": "Alchemist",
+   "npc": "alchemist",
+   "d": "Potions, and elixirs that last one floor."
+  },
+  "mystic": {
+   "n": "Mystic",
+   "npc": "mystic",
+   "d": "Enchanted gear and skill tomes, at a price."
+  },
+  "fence": {
+   "n": "Fence",
+   "npc": "fence",
+   "d": "Pays well for loot, sells odds and ends."
+  }
+ },
+ "EVENTS": {
+  "shrine": {
+   "n": "Shrine-keeper",
+   "npc": "shrine",
+   "d": "A wandering priest offers the blessing of forgotten gods."
+  },
+  "gambler": {
+   "n": "Gambler",
+   "npc": "gambler",
+   "d": "A grinning dicer rattles a cup. \"Care to test your luck?\""
+  },
+  "wounded": {
+   "n": "Wounded Delver",
+   "npc": "wounded",
+   "d": "A battered adventurer slumps against the wall, bleeding."
+  },
+  "fortune": {
+   "n": "Fortune-teller",
+   "npc": "fortune",
+   "d": "She reads the lines of your palm by firelight."
+  },
+  "sage": {
+   "n": "Wandering Sage",
+   "npc": "sage",
+   "d": "An old scholar who has walked the deep halls."
+  },
+  "cartographer": {
+   "n": "Cartographer",
+   "npc": "cartographer",
+   "d": "A mapmaker selling charts of the floors below."
+  }
+ },
+ "CAMP_MAP": [
+  "#################",
+  "########E########",
+  "#######...#######",
+  "#####f.....l#####",
+  "####..1...2..####",
+  "###r.........a###",
+  "###.T...F...Q.###",
+  "###...........###",
+  "###h.S.B..3..e###",
+  "####.........####",
+  "#####p......#####",
+  "########@########",
+  "#################"
+ ],
+ "RARNAME": [
+  "",
+  "Magic",
+  "Rare"
+ ],
+ "DX": [
+  0,
+  1,
+  0,
+  -1
+ ],
+ "DY": [
+  -1,
+  0,
+  1,
+  0
+ ],
+ "CONST": {
+  "UPMAX": 15,
+  "POTION_COST": 20,
+  "POTION_MAX": 9,
+  "TRAIN_CAP": 40,
+  "BAG_MAX": 12,
+  "SLOTS": 3,
+  "GATE": 5,
+  "COX": 8,
+  "COY": 10
+ }
+}

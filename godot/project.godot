@@ -1,0 +1,63 @@
+; Engine configuration file.
+; Hand-written starter for Deepdelve. Godot will tidy this file the first time
+; you open the project; that is expected.
+
+config_version=5
+
+[application]
+
+config/name="Deepdelve"
+config/description="First-person grid dungeon crawler (port of the browser build)."
+run/main_scene="res://scenes/main.tscn"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+config/icon="res://icon.svg"
+
+[autoload]
+
+Controls="*res://autoload/controls.gd"
+Data="*res://autoload/data.gd"
+Hero="*res://autoload/hero.gd"
+
+[display]
+
+window/size/viewport_width=320
+window/size/viewport_height=480
+window/size/window_width_override=640
+window/size/window_height_override=960
+window/stretch/mode="viewport"
+window/stretch/aspect="expand"
+window/stretch/scale_mode="integer"
+window/handheld/orientation=1
+
+[gui]
+
+theme/default_font_antialiasing=0
+theme/default_font_hinting=0
+theme/default_font_subpixel_positioning=0
+
+[importer_defaults]
+
+texture={
+"compress/mode": 0,
+"detect_3d/compress_to": 0,
+"mipmaps/generate": false
+}
+font_data_dynamic={
+"antialiasing": 0,
+"hinting": 0,
+"subpixel_positioning": 0,
+"generate_mipmaps": false
+}
+
+[input_devices]
+
+pointing/emulate_mouse_from_touch=true
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/canvas_textures/default_texture_filter=0
+textures/default_filters/anisotropic_filtering_level=0
+anti_aliasing/quality/msaa_3d=0
+environment/defaults/default_clear_color=Color(0, 0, 0, 1)
