@@ -19,6 +19,11 @@ built as a family learn-gamedev-with-AI project. The whole game is one file, `in
 - Resolution: the renderer draws `RW×RH` pixels; the preset sets pixels across the view's shorter
   side (classic = 160, the original look), capped at `RES_CAP` total pixels. New sounds must connect
   to `BUS.sfx` (or `BUS.mus` for music), never straight to `AC.destination`, so the volume sliders work.
+- Gear: weapon (`H.weapon`), off-hand (`H.shield`) and `H.eq` = head, neck, chest, arms, lwrist, rwrist, hands, legs,
+  feet, ring1, ring2. Armor pieces carry `sl` (slot) and decimal armor (`pieceA`); jewelry is `kind:'j'` (`jt` ring/neck),
+  always magic. Armor-type rules (metal hurts stealth/dodge, cloth helps casters and martial, perks) scale with
+  `armShare(type)`. Use `slotItem`/`setSlot`/`targetSlot`/`equip` rather than touching slots directly. Items in the
+  pack have `gx/gy`; add them with `bagAdd`/`stash` (never `H.bag.push`), check room with `bagFits`.
 - Saves live in localStorage (`deepdelve_slot_0..2`). Any new hero field needs a default in
   `migrateHero` / `ensureSkills` so old saves keep loading.
 - Commit after each working change, with a clear message.
@@ -32,6 +37,8 @@ The script is split by `// ===== SECTION =====` headers. Search for the header t
 | PIXEL ART | `SPR` item sprites, `MONSPR` monster sprites (24 px, mirrored halves, idle/attack/back frames), `TX` wall/floor textures |
 | DATA | `MONS` monster table (hp, dmg, floor range, guardian names) |
 | ITEMS | `TIERS`, `WTYPES`, `WVAR`, `ATYPES`, `SHIELDS`, `AFFIX`, `rollGear`, `wprop`, `gearDesc` |
+| GEAR SLOTS | `SLOTDEF` (armor pieces: share of a full suit `sh`, affix strength `am`), `EQSLOTS`, `APIECE` names, jewelry `JMAT`, `armShare(type)` (mixed armor by weight), `setupEq` (slots, save migration, `H.armor` = chest accessor) |
+| INVENTORY | `openBag`: paperdoll (`DOLLSLOTS`) + `drawAvatar`, `invStats`, backpack grid (`BAGW`x`BAGH`, `isz`, `bagGrid`, `fitsAt`, `findSpot`, `bagAdd`, `stash`), drag and drop (`IDR`), `invEquipBag`, `invUnequip` |
 | SKILLS & PERKS | `SKILLS` (19 combat), `CRAFT_SK` (7 crafting), `PERKS`, `train`, `skNeed` |
 | SPELLS | `SPELLS` (Holy, Nature, Arcane; 3 each), `cast` |
 | BALANCE | `BAL`: every difficulty knob in one object |

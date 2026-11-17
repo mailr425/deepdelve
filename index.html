@@ -97,6 +97,33 @@ body.wide #side{width:380px;display:flex;flex-direction:column;justify-content:f
 .opt .v{width:44px;text-align:right;color:var(--gold);font-family:var(--px);font-size:10px}
 .keys{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;text-align:left;font-size:20px;line-height:1em}
 .keys b{font-family:var(--px);font-size:10px;color:var(--gold);font-weight:normal;padding-top:4px}
+/* ===== Inventory (Diablo-style): paperdoll + avatar, stats, sized-item backpack grid ===== */
+#bagbox.inv{max-width:min(96vw,calc(940px / var(--ui,1)));padding:12px}
+.invtop{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;align-items:flex-start}
+.doll{display:grid;grid-template-columns:52px 136px 52px;grid-auto-rows:52px;gap:4px;
+ grid-template-areas:"head av neck" "chest av ring1" "arms av ring2" "lwrist av rwrist" "hands av legs" "weapon feet shield"}
+.slot{position:relative;width:52px;height:52px;padding:0;min-height:0;background:rgba(10,7,5,.75);border:2px solid #4a3a28;box-shadow:inset 0 0 0 2px rgba(0,0,0,.5);touch-action:none}
+.slot img{width:40px;height:40px;image-rendering:pixelated}
+.slot .lb{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#5a4a38;font-size:10px;line-height:1.1;pointer-events:none}
+.slot.r1{border-color:#4a6aa8}.slot.r2{border-color:#c8a040}.slot.sel,.it.sel{outline:2px solid #ffd36a;outline-offset:1px}
+.slot.ok{background:rgba(40,90,30,.55)}.slot.no{background:rgba(110,30,20,.55)}
+#avatar{grid-area:av;width:136px;height:240px;align-self:start;image-rendering:pixelated;background:radial-gradient(ellipse at 50% 60%,#2a2018 0,#120c08 70%);border:2px solid #3a2c1e}
+.istats{min-width:250px;max-width:340px;flex:1;text-align:left;font-family:var(--px);font-size:10px;line-height:1.5}
+.istats h3{margin:4px 0 6px}
+.srow{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid rgba(0,0,0,.35);padding:3px 0}
+.srow b{color:#f0e4c8;font-weight:normal;text-align:right}.srow span{color:#b8a888}
+.invmid{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;align-items:flex-start;margin-top:12px}
+.bag{position:relative;width:calc(var(--c)*10);height:calc(var(--c)*5);background-color:rgba(8,6,4,.8);border:2px solid #4a3a28;
+ background-image:linear-gradient(rgba(90,70,50,.35) 1px,transparent 1px),linear-gradient(90deg,rgba(90,70,50,.35) 1px,transparent 1px);background-size:var(--c) var(--c);touch-action:none}
+.it{position:absolute;padding:0;min-height:0;background:rgba(30,22,16,.85);border:1px solid #000;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;touch-action:none}
+.it img{max-width:90%;max-height:90%;width:calc(var(--c)*1.3);image-rendering:pixelated;pointer-events:none}
+.it.r1{background:rgba(26,34,66,.9)}.it.r2{background:rgba(70,56,18,.9)}.it.up::after{content:'▲';position:absolute;right:2px;top:0;color:#9ee080;font-size:10px}
+.cell-ok{position:absolute;background:rgba(80,200,60,.35);pointer-events:none}.cell-no{position:absolute;background:rgba(220,60,40,.35);pointer-events:none}
+.icard{width:300px;min-height:140px;text-align:left;font-size:20px;line-height:1.05em;background:rgba(10,7,5,.8);border:2px solid #4a3a28;padding:8px 10px}
+.icard .nm{font-family:var(--px);font-size:10px;margin-bottom:6px}.icard small{color:#b8a888}.icard .btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.icard .btns button{flex:1;min-width:84px;padding:10px 4px}.cmp{margin-top:6px;color:#9a8a6a;font-size:18px}
+#iDrag{position:fixed;z-index:99;pointer-events:none;opacity:.85;display:flex;align-items:center;justify-content:center;background:rgba(30,22,16,.6);border:1px solid #ffd36a}
+#iDrag img{width:70%;image-rendering:pixelated}
 /* ===== Immersive HUD (body.imm): full-screen view, Skyrim/Minecraft-style overlay ===== */
 #ihud,#xhair,#cmpwrap,#tinfo,#lockhint{display:none}
 body.imm #app{display:block;padding:0}
@@ -408,56 +435,81 @@ const MATS={cloth:['Linen','Wool','Quilted','Silk','Spidersilk','Runeweave','Dra
 const matName=(kind,ti)=>(MATS[kind]||TIERS.map(x=>x.m))[ti];
 function baseName(g){const ti=Math.max(0,TIERS.findIndex(x=>x.t===g.t));
   if(g.kind==='w')return`${matName(g.wt==='bow'||g.var==='bo'||g.var==='staff'?'bow':g.var==='wraps'?'cloth':'metal',ti)} ${wprop(g).n}`;
+  if(g.kind==='j')return`${JMAT[ti]} ${g.jt==='ring'?'Ring':'Amulet'}`;
+  if(g.kind==='a'&&g.sl&&g.sl!=='chest')return`${matName(g.at==='metal'?'metal':g.at,ti)} ${APIECE[g.at][g.sl][g.t>=7?1:0]}`;
   if(g.kind==='a')return`${matName(g.at==='metal'?'metal':g.at,ti)} ${g.var==='gi'?(g.t>=7?'Battle Gi':'Gi'):ATYPES[g.at].n[g.t>=7?1:0]}`;
   const S=SHIELDS.filter(x=>x.b<=g.b+1e-9).pop()||SHIELDS[0];return`${matName('shield',ti)} ${S.n}`}
-function fixNames(h){for(const g of[h.weapon,h.armor,h.shield,...(h.bag||[])])if(g&&!g.starter&&g.t){const b=baseName(g);if(b!==g.base){g.base=b;nameGear(g)}}return h}
+function fixNames(h){for(const g of[h.weapon,h.armor,h.shield,...Object.values(h.eq||{}),...(h.bag||[])])if(g&&!g.starter&&g.t){const b=baseName(g);if(b!==g.base){g.base=b;nameGear(g)}}return h}
 const WVAR={thrown:{javelin:{n:'Javelins',one:'javelin',dm:.8,ammo:5,range:4,crit:.05},knife:{n:'Throwing Knives',one:'throwing knife',dm:.62,ammo:8,range:4,crit:.14},
    shuriken:{n:'Shurikens',one:'shuriken',dm:.5,ammo:10,range:5,crit:.1,bleed:.25}},
  martial:{cestus:{n:'Cestus',dm:.78,hit:.08,crit:.05,disc:1},wraps:{n:'Handwraps',dm:.62,hit:.12,crit:.06,dodge:.05,double:.2,disc:1},bo:{n:'Bo Staff',dm:.92,hit:.06,crit:.04,two:1,dodge:.04,stun:.1,disc:1}},
  blunt:{mace:{n:'Mace'},cleric:{n:"Cleric's Mace",dm:.95,sp:{holy:.2},mp:.1},staff:{n:'Wizard Staff',dm:.8,two:1,sp:{arcane:.2},mp:.2}}};
 const defVar=wt=>wt==='thrown'?'javelin':wt==='martial'?'cestus':wt==='blunt'?'mace':null;
 function wprop(g){const B=WTYPES[g.wt],v=WVAR[g.wt];if(!v)return B;return Object.assign({},B,v[g.var||defVar(g.wt)])}
-const isRobe=a=>a&&a.at==='cloth'&&a.var!=='gi',isGi=a=>a&&a.at==='cloth'&&a.var==='gi';
-const disc=()=>H.weapon.wt==='martial'&&H.armor.at==='cloth';
+const isRobe=a=>a&&!a.none&&a.at==='cloth'&&a.var!=='gi'&&(a.sl||'chest')==='chest',isGi=a=>a&&a.at==='cloth'&&a.var==='gi';
+const disc=()=>H.weapon.wt==='martial'&&armShare('cloth')>=.6;
 const ATRAIT={gi:'+6% dodge, +8% melee damage, full dodge',cloth:'+15% mana, faster mana regen, full dodge',leather:'75% dodge',metal:'35% dodge, -25 stealth, sneaking is harder'};
 const ATYPES={cloth:{n:['Robe','Vestments'],am:.35},leather:{n:['Jerkin','Brigandine'],am:.65},metal:{n:['Chainmail','Plate'],am:1}};
+// ================= GEAR SLOTS =================
+// Armor comes in pieces. sh = share of a full suit's armor (the 8 pieces sum to 1; wrists count twice),
+// am = affix strength vs a chest piece. Rings and the amulet are jewelry: no armor, always magic.
+const SLOTDEF={head:{n:'Head',sh:.14,am:.5},chest:{n:'Chest',sh:.34,am:1},arms:{n:'Arms',sh:.10,am:.4},wrist:{n:'Wrist',sh:.04,am:.3},
+ hands:{n:'Hands',sh:.08,am:.4},legs:{n:'Legs',sh:.18,am:.6},feet:{n:'Feet',sh:.08,am:.4}};
+const SLOTW=[['chest',2],['head',1.5],['legs',1.5],['arms',1],['hands',1.2],['feet',1.2],['wrist',1.2]];
+const EQSLOTS=['head','neck','chest','arms','lwrist','rwrist','hands','legs','feet','ring1','ring2'];
+const EQNAME={head:'Head',neck:'Amulet',chest:'Chest',arms:'Arms',lwrist:'Left wrist',rwrist:'Right wrist',hands:'Hands',legs:'Legs',feet:'Feet',ring1:'Ring',ring2:'Ring',weapon:'Weapon',shield:'Off-hand'};
+const APIECE={cloth:{head:['Hood','Cowl'],arms:['Sleeves','Mantle'],wrist:['Wristwraps','Cuffs'],hands:['Gloves','Mitts'],legs:['Trousers','Leggings'],feet:['Sandals','Slippers']},
+ leather:{head:['Cap','Coif'],arms:['Sleeves','Spaulders'],wrist:['Bracers','Vambraces'],hands:['Gloves','Grips'],legs:['Leggings','Chaps'],feet:['Boots','Treads']},
+ metal:{head:['Helm','Greathelm'],arms:['Pauldrons','Rerebraces'],wrist:['Bracers','Vambraces'],hands:['Gauntlets','War Gauntlets'],legs:['Greaves','Cuisses'],feet:['Sabatons','War Boots']}};
+const JMAT=['Copper','Silver','Gold','Electrum','Mithril','Runed','Dragonbone','Starmetal','Void'];
+const AWT={cloth:1,leather:2,metal:3};
+const round1=v=>Math.round(v*10)/10;
+const pieceA=(T,at,sl,plus)=>Math.max(.1,round1(T.a*ATYPES[at].am*SLOTDEF[sl].sh+(plus||0)*SLOTDEF[sl].sh*2.5));
+const armorPieces=()=>H&&H.eq?Object.values(H.eq).filter(g=>g&&g.kind==='a'):[];
+// Mixed armor counts by weight: each piece weighs (its armor share x cloth 1 / leather 2 / metal 3).
+function armShare(at){let t=0,s=0;for(const g of armorPieces()){const w=SLOTDEF[g.sl||'chest'].sh*AWT[g.at];t+=w;if(g.at===at)s+=w}return t?s/t:(at==='cloth'?1:0)}
+const domArmor=()=>['metal','leather','cloth'].sort((a,b)=>armShare(b)-armShare(a))[0];
+const NOARM={kind:'a',at:'cloth',sl:'chest',a:0,t:0,plus:0,aff:[],rar:0,n:'Nothing',base:'Nothing',none:1};
 const SHIELDS=[{t:1,n:'Buckler',b:.1},{t:4,n:'Kite Shield',b:.15},{t:8,n:'Tower Shield',b:.2},{t:12,n:'Aegis',b:.25}];
 const AFFIX={
  pre:[{k:'flame',n:'Flaming',on:'w',v:t=>2+Math.floor(t*.8)},{k:'keen',n:'Keen',on:'w',v:t=>5+t},{k:'vicious',n:'Vicious',on:'w',v:t=>10+t*2},
-      {k:'sturdy',n:'Sturdy',on:'as',v:t=>1+Math.floor(t/3)},{k:'shadow',n:'Shadowed',on:'a',v:t=>8+t*2},{k:'blessed',n:'Blessed',on:'aw',v:t=>8+t*2}],
- suf:[{k:'bear',n:'of the Bear',on:'was',v:t=>6+t*2},{k:'fox',n:'of the Fox',on:'was',v:t=>3+Math.floor(t/2)},{k:'owl',n:'of the Owl',on:'was',v:t=>5+t*2},
-      {k:'leech',n:'of Leeching',on:'w',v:t=>1+Math.floor(t/4)},{k:'ward',n:'of Warding',on:'as',v:t=>1+Math.floor(t/3)}]};
+      {k:'sturdy',n:'Sturdy',on:'asj',v:t=>1+Math.floor(t/3)},{k:'shadow',n:'Shadowed',on:'aj',v:t=>8+t*2},{k:'blessed',n:'Blessed',on:'awj',v:t=>8+t*2}],
+ suf:[{k:'bear',n:'of the Bear',on:'wasj',v:t=>6+t*2},{k:'fox',n:'of the Fox',on:'wasj',v:t=>3+Math.floor(t/2)},{k:'owl',n:'of the Owl',on:'wasj',v:t=>5+t*2},
+      {k:'leech',n:'of Leeching',on:'w',v:t=>1+Math.floor(t/4)},{k:'ward',n:'of Warding',on:'asj',v:t=>1+Math.floor(t/3)}]};
 const AFFDESC={flame:v=>`+${v} fire dmg`,keen:v=>`+${v}% crit`,vicious:v=>`+${v}% dmg`,sturdy:v=>`+${v} armor`,shadow:v=>`+${v} stealth`,blessed:v=>`+${v}% spell power`,
  bear:v=>`+${v} max HP`,fox:v=>`+${v}% dodge`,owl:v=>`+${v} max mana`,leech:v=>`heal ${v} on hit`,ward:v=>`+${v} armor`};
 const RARNAME=['','Magic','Rare'],RARCLS=['','info','gold'];
 function pickTier(il){const eff=Math.min(il,13),pool=TIERS.filter(x=>x.t<=eff+1&&x.t>=eff-3);return{T:pick(pool.length?pool:TIERS.slice(-2)),over:Math.max(0,il-13)}}
 function rollGear(depth,bonus=0,o={}){
   const il=depth+bonus;let{T,over}=pickTier(il);if(o.ti!=null){T=TIERS[o.ti];over=0}
-  const r=o.kind==='w'?0:o.kind==='a'?.6:o.kind==='s'?.9:Math.random();
+  const r=o.kind==='w'?0:o.kind==='a'?.6:o.kind==='j'?.8:o.kind==='s'?.95:Math.random();
   const plus=o.plus!=null?o.plus:(Math.random()<.15+il*.015?ri(1,Math.min(3,1+(il>>2))):0)+Math.floor(over*BAL.overE+Math.random()*over*.2);
   let g;
-  if(r<.5){const wt=o.wt||pick(Object.keys(WTYPES)),vr=o.var!==undefined?o.var:wt==='blunt'?pick(['mace','mace','cleric','staff']):WVAR[wt]?pick(Object.keys(WVAR[wt])):null,W=wprop({wt,var:vr});
+  if(r<.4){const wt=o.wt||pick(Object.keys(WTYPES)),vr=o.var!==undefined?o.var:wt==='blunt'?pick(['mace','mace','cleric','staff']):WVAR[wt]?pick(Object.keys(WVAR[wt])):null,W=wprop({wt,var:vr});
     g={kind:'w',wt,base:`${T.m} ${W.n}`,d:[Math.max(1,Math.round(T.d[0]*W.dm))+plus,Math.max(2,Math.round(T.d[1]*W.dm))+plus]};if(vr)g.var=vr;if(W.ammo)g.ammo=g.maxAmmo=W.ammo}
-  else if(r<.82){const at=o.at||pick(Object.keys(ATYPES)),A=ATYPES[at];
-    g={kind:'a',at,base:`${T.m} ${A.n[T.t>=7?1:0]}`,a:Math.max(1,Math.round(T.a*A.am))+plus};if(at==='cloth'){const v=o.var!==undefined?o.var:(Math.random()<.5?'gi':null);if(v)g.var=v}}
+  else if(r<.76){const at=o.at||pick(Object.keys(ATYPES)),sl=o.sl||(()=>{let x=Math.random()*SLOTW.reduce((a,b)=>a+b[1],0);for(const [k,w] of SLOTW){if((x-=w)<=0)return k}return'chest'})();
+    g={kind:'a',at,sl,base:'',a:pieceA(T,at,sl,plus)};if(at==='cloth'&&sl==='chest'){const v=o.var!==undefined?o.var:(Math.random()<.5?'gi':null);if(v)g.var=v}}
+  else if(r<.86){g={kind:'j',jt:o.jt||(Math.random()<.62?'ring':'neck'),base:''}}
   else{const S=SHIELDS.filter(s=>s.t<=Math.max(1,o.ti!=null?T.t:il)).pop();g={kind:'s',base:`${T.m} ${S.n}`,b:S.b,a:Math.max(1,Math.round(T.a*.25))+plus}}
   g.t=T.t;g.plus=plus;g.base=baseName(g);
   const rr=Math.random(),rare=rr<Math.min(.3,.03+il*.012+bonus*.05),magic=!rare&&rr<Math.min(.65,.18+il*.025+bonus*.1);
-  g.rar=o.rar!=null?o.rar:rare?2:magic?1:0;g.aff=[];
-  const pre=AFFIX.pre.filter(a=>a.on.includes(g.kind)),suf=AFFIX.suf.filter(a=>a.on.includes(g.kind)),mk=a=>({k:a.k,v:a.v(T.t+(over>>1))});
+  g.rar=o.rar!=null?o.rar:rare?2:magic?1:0;if(g.kind==='j'&&!g.rar)g.rar=1;g.aff=[];
+  const pre=AFFIX.pre.filter(a=>a.on.includes(g.kind)),suf=AFFIX.suf.filter(a=>a.on.includes(g.kind)),am=affMul(g),mk=a=>({k:a.k,v:Math.max(1,Math.round(a.v(T.t+(over>>1))*am))});
   if(g.rar===2){g.aff.push(mk(pick(pre)),mk(pick(suf)))}else if(g.rar===1)g.aff.push(mk(pick(Math.random()<.5?pre:suf)));
   nameGear(g);return g;
 }
+const affMul=g=>g.kind==='a'?SLOTDEF[g.sl||'chest'].am:g.kind==='j'?(g.jt==='ring'?.6:.8):1;
 function nameGear(g){const p=(g.aff||[]).map(a=>AFFIX.pre.find(x=>x.k===a.k)).find(Boolean),s=(g.aff||[]).map(a=>AFFIX.suf.find(x=>x.k===a.k)).find(Boolean);
   g.n=`${p?p.n+' ':''}${g.base}${g.plus?' +'+g.plus:''}${s?' '+s.n:''}`}
-const gearVal=g=>{if(!g)return 0;let v=g.kind==='w'?(g.d[0]+g.d[1])/2:g.kind==='a'?g.a:g.a+g.b*20;
+const gearVal=g=>{if(!g)return 0;let v=g.kind==='w'?(g.d[0]+g.d[1])/2:g.kind==='a'?g.a:g.kind==='j'?2+(g.t||0)*.3:g.a+g.b*20;
   for(const a of g.aff||[])v+=a.k==='flame'?a.v:a.k==='vicious'?v*a.v/100:a.v*.25;return v};
 const sneakMul=wt=>(WTYPES[wt].sneak||1.5)+(wt==='dagger'&&has('dagger_25')?1:0);
 const VDESC=W=>(W.disc?' · +15% dmg, +8% dodge, +5% hit in cloth':'')+(W.bleed?` · ${Math.round(W.bleed*100)}% bleed`:'')+(W.double?` · ${Math.round(W.double*100)}% double strike`:'')+(W.stun?` · ${Math.round(W.stun*100)}% stun`:'')+(W.sp?Object.entries(W.sp).map(([k,v])=>` · +${Math.round(v*100)}% ${SKILLS[k]} spell power`).join(''):'')+(W.mp?` · +${Math.round(W.mp*100)}% max mana`:'')+(W.dodge?` · +${Math.round(W.dodge*100)}% dodge`:'');
 const gearDesc=g=>{const W=g.kind==='w'?wprop(g):null;let s=g.kind==='w'?`${W.n} · ${g.d[0]}-${g.d[1]} dmg${W.range?' · range '+W.range:''}${VDESC(W)}${W.two?' · 2-hand':''}${g.maxAmmo?' · '+g.maxAmmo+' per floor, pick them back up':''} · sneak x${W.sneak||1.5}`
-  :g.kind==='a'?`${isGi(g)?'Cloth (fighter)':g.at==='cloth'?'Cloth (caster)':cap(g.at)} · ${g.a} armor · ${ATRAIT[isGi(g)?'gi':g.at]}`:`Shield · ${Math.round(g.b*100)}% block · ${g.a} armor`;
+  :g.kind==='j'?(g.jt==='ring'?'Ring':'Amulet')
+  :g.kind==='a'?`${SLOTDEF[g.sl||'chest'].n} · ${isGi(g)?'Cloth (fighter)':g.at==='cloth'?'Cloth (caster)':cap(g.at)} · ${g.a} armor${(g.sl||'chest')==='chest'?' · '+ATRAIT[isGi(g)?'gi':g.at]:''}`:`Shield · ${Math.round(g.b*100)}% block · ${g.a} armor`;
   for(const a of g.aff||[])s+=' · '+AFFDESC[a.k](a.v);
-  if(H&&H.sk){const sks=g.kind==='w'?[g.wt,W.range?'ranged':'melee']:g.kind==='a'?[g.at]:['block'];
+  if(H&&H.sk&&g.kind!=='j'){const sks=g.kind==='w'?[g.wt,W.range?'ranged':'melee']:g.kind==='a'?[g.at]:['block'];
     s+=` · <span class="info">Uses ${sks.map(k=>SKILLS[k]+' '+sk(k)).join(' + ')}</span>`}
   return s};
 const gname=g=>g.rar?`<span class="${RARCLS[g.rar]}">${g.n}</span>`:g.n;
@@ -537,7 +589,22 @@ const starterW=()=>({kind:'w',wt:'sword',base:'Rusty Shortsword',n:'Rusty Shorts
 const starterA=()=>({kind:'a',at:'cloth',base:'Patched Tunic',n:'Patched Tunic',a:1,t:0,plus:0,aff:[],rar:0,starter:1});
 const newHero=()=>({mats:{},spEmp:{},stash:[],ready:'missile',name:pick(HERO_NAMES),lvl:1,xp:0,weapon:starterW(),armor:starterA(),shield:null,bag:[],potions:1,bank:0,
   up:{vit:0,for:0},sk:newSkills(),perks:[],pp:0,waypoint:1,deepest:0,bosses:0,deaths:0,runs:0,kills:0,ver:2});
-function ensureSkills(h){h.sk=h.sk||{};for(const k in SKILLS)if(!h.sk[k])h.sk[k]={lv:5,xp:0};h.mats=h.mats||{};h.spEmp=h.spEmp||{};return h}
+function ensureSkills(h){h.sk=h.sk||{};for(const k in SKILLS)if(!h.sk[k])h.sk[k]={lv:5,xp:0};h.mats=h.mats||{};h.spEmp=h.spEmp||{};return setupEq(h)}
+// Equipment slots (h.eq). Old saves had one suit of armor: it becomes the chest piece, and a matching
+// plain set of the same tier fills the other slots so the hero is not weaker. H.armor stays readable
+// (= the chest piece) for older code paths; it is not saved.
+function setupEq(h){
+  const fixA=g=>{if(g&&g.kind==='a'&&!g.sl){g.sl='chest';if(!g.starter&&g.t){const T=TIERS.find(x=>x.t===g.t)||TIERS[0];g.a=pieceA(T,g.at,'chest',g.plus);g.base=baseName(g);nameGear(g)}else g.a=.5}return g};
+  if(!h.eq){h.eq={};const a=h.armor;delete h.armor;
+    if(a){fixA(a);h.eq.chest=a;
+      if(!a.starter&&a.t){const ti=Math.max(0,TIERS.findIndex(x=>x.t===a.t));
+        for(const sl of['head','arms','wrist','wrist','hands','legs','feet']){const g=rollGear(0,0,{kind:'a',at:a.at,sl,ti,plus:0,rar:0,var:null});h.eq[sl==='wrist'?(h.eq.lwrist?'rwrist':'lwrist'):sl]=g}}}}
+  else if('armor' in h&&Object.getOwnPropertyDescriptor(h,'armor').enumerable)delete h.armor;
+  for(const k of EQSLOTS)if(!(k in h.eq))h.eq[k]=null;
+  (h.bag||[]).forEach(fixA);(h.stash||[]).forEach(fixA);
+  Object.defineProperty(h,'armor',{get(){return h.eq.chest||NOARM},set(v){h.eq.chest=v},enumerable:false,configurable:true});
+  if((h.bag||[]).some(g=>g.gx==null)){const old=h.bag;h.bag=[];const hold=H;H=h;for(const g of old){delete g.gx;if(!bagAdd(g)){h.stash=h.stash||[];h.stash.push(g)}}H=hold}
+  return h}
 function migrateHero(h){
   if(h.ver===2)return h;
   let refund=0;for(const k of['mig','tou'])for(let i=0;i<((h.up&&h.up[k])||0);i++)refund+=Math.round(90*Math.pow(1.75,i));
@@ -545,17 +612,17 @@ function migrateHero(h){
   h.weapon=normGear(h.weapon)||starterW();h.armor=normGear(h.armor)||starterA();h.shield=null;h.bag=(h.bag||[]).map(normGear);
   h.sk=newSkills();{const g=Math.min(35,5+(h.lvl||1)*2);h.sk[h.weapon.wt].lv=g;h.sk[h.armor.at].lv=g;h.sk.melee.lv=Math.round(g*.8);h.sk.dodge.lv=Math.round(g*.5)}h.perks=[];h.pp=Math.max(0,(h.lvl||1)-1);h.ver=2;h.migrated=refund;return h}
 const xpNext=l=>Math.round(20*Math.pow(l,1.7));
-const affSum=k=>[H.weapon,H.armor,H.shield].reduce((s,g)=>s+((g&&g.aff)||[]).filter(a=>a.k===k).reduce((x,a)=>x+a.v,0),0);
+const affSum=k=>[H.weapon,H.shield,...Object.values(H.eq||{})].reduce((s,g)=>s+((g&&g.aff)||[]).filter(a=>a.k===k).reduce((x,a)=>x+a.v,0),0);
 const maxHP=()=>Math.round((BAL.hp0+(H.lvl-1)*BAL.hpLvl+H.up.vit*6+affSum('bear'))*(1+((curBuff()||{}).hp||0)));
-const maxMP=()=>Math.round((10+(H.lvl-1)*3+affSum('owl'))*(has('cloth_25')?1.2:1)*(isRobe(H.armor)?1.15:1)*(1+(wprop(H.weapon).mp||0)));
+const maxMP=()=>Math.round((10+(H.lvl-1)*3+affSum('owl'))*(has('cloth_25')?1.2:1)*(isRobe(H.eq.chest)?1.15:1)*(1+(wprop(H.weapon).mp||0)));
 const dmgBonus=()=>Math.floor(H.lvl/3);
-const armorVal=()=>{const a=H.armor;let v=a.a*(.7+eff(a.at)*.006)+(H.shield?H.shield.a:0)+affSum('sturdy')+affSum('ward');
-  if(a.at==='metal'&&has('metal_25'))v+=2;v+=(curBuff()||{}).armor||0;return Math.round(v)};
-const dodgeCh=()=>{let c=eff('dodge')*.003*{cloth:1,leather:.75,metal:.35}[H.armor.at]+affSum('fox')/100;
-  if(has('dodge_25'))c+=.08;if(has('leather_25')&&H.armor.at==='leather')c+=.05;if(has('martial_25')&&H.weapon.wt==='martial')c+=.1;c+=wprop(H.weapon).dodge||0;if(isGi(H.armor))c+=.06;if(disc())c+=.08;return Math.min(.6,c)};
+const armorVal=()=>{let v=(H.shield?H.shield.a:0)+affSum('sturdy')+affSum('ward');for(const g of armorPieces())v+=g.a*(.7+eff(g.at)*.006);
+  if(has('metal_25'))v+=Math.round(2*armShare('metal'));v+=(curBuff()||{}).armor||0;return Math.round(v)};
+const dodgeCh=()=>{let c=eff('dodge')*.003*(1-.25*armShare('leather')-.65*armShare('metal'))+affSum('fox')/100;
+  if(has('dodge_25'))c+=.08;if(has('leather_25')&&armShare('leather')>=.5)c+=.05;if(has('martial_25')&&H.weapon.wt==='martial')c+=.1;c+=wprop(H.weapon).dodge||0;if(isGi(H.eq.chest))c+=.06;if(disc())c+=.08;return Math.min(.6,c)};
 const blockCh=()=>H.shield?Math.min(.65,H.shield.b+eff('block')*.0025+(has('block_25')?.1:0)):0;
 const spellPow=sc=>(1+eff(sc)*.012)*(1+affSum('blessed')/100)*(1+((wprop(H.weapon).sp||{})[sc]||0));
-const stealthVal=()=>eff('stealth')+affSum('shadow')+((curBuff()||{}).stealth||0)-(H.armor.at==='metal'?25:H.armor.at==='leather'?0:0);
+const stealthVal=()=>eff('stealth')+affSum('shadow')+((curBuff()||{}).stealth||0)-Math.round(25*armShare('metal'));
 const goldMul=()=>(1+.15*H.up.for)*(1+((curBuff()||{}).gold||0));
 const upCost=k=>Math.round(UPS[k].b*Math.pow(1.75,H.up[k]));
 const cell=(x,y)=>(x<0||y<0||x>=MW||y>=MH)?WALL:G.map[idx(x,y)];
@@ -675,7 +742,7 @@ function worldTick(){
   const P=G.P;G.turn++;
   monstersAct();
   if(!G.dead&&G.turn%7===0&&P.hp<maxHP()&&!G.mons.some(m=>Math.abs(m.x-P.x)+Math.abs(m.y-P.y)===1))P.hp++;
-  if(!G.dead&&G.turn%(isRobe(H.armor)?2:3)===0&&P.mp<maxMP())P.mp++;
+  if(!G.dead&&G.turn%(isRobe(H.eq.chest)?2:3)===0&&P.mp<maxMP())P.mp++;
   if(!G.dead&&P.regen>0){P.regen--;P.hp=Math.min(maxHP(),P.hp+(P.regenAmt||2))}
   if(!G.dead&&G.turn%2===0&&G.mons.some(m=>!m.awake&&Math.abs(m.x-P.x)+Math.abs(m.y-P.y)<=5))train('stealth',P.sneak?.8:.3);
   updateSeen();
@@ -701,7 +768,7 @@ function tryMove(rel){
   P.x=nx;P.y=ny;if(!P.sneak)SFX.step();onEnter();endTurn();if(G&&!G.dead&&P.sneak)endTurn();
 }
 const mname=m=>m.boss?MONS[m.t].boss:MONS[m.t].n;
-function toggleSneak(){if(G.camp)return;const P=G.P;P.sneak=!P.sneak;log(P.sneak?(H.armor.at==='metal'?'You crouch, but your metal armor clanks. Sneaking is much harder in metal.':'You crouch and move slowly and silently.'):'You stand up.',P.sneak?'info':'');hud();dirty=true}
+function toggleSneak(){if(G.camp)return;const P=G.P;P.sneak=!P.sneak;log(P.sneak?(armShare('metal')>=.5?'You crouch, but your metal armor clanks. Sneaking is much harder in metal.':'You crouch and move slowly and silently.'):'You stand up.',P.sneak?'info':'');hud();dirty=true}
 function bump(d){FX.bump={d,t:performance.now()};SFX.bump();dirty=true}
 function onEnter(){
   const P=G.P;for(const it of itemsAt(P.x,P.y)){pickup(it);G.items.splice(G.items.indexOf(it),1)}
@@ -720,26 +787,45 @@ function pickup(it){
     else{const v=Math.round(ri(5,12)*Math.pow(G.depth,BAL.goldExp)*goldMul());P.gold+=v;if(H.potions<POTION_MAX)H.potions++;log(`The chest holds ${v} gold and a potion.`,'gold');float('+'+v+'G','#e8c060')}
   }
 }
-const slotOf=g=>({w:'weapon',a:'armor',s:'shield'})[g.kind];
-function isUpgrade(g){const cur=H[slotOf(g)];if(!cur)return true;
+const slotItem=id=>id==='weapon'?H.weapon:id==='shield'?H.shield:H.eq[id];
+function setSlot(id,g){if(id==='weapon')H.weapon=g;else if(id==='shield')H.shield=g||null;else H.eq[id]=g||null}
+function slotsFor(g){if(g.kind==='w')return['weapon'];if(g.kind==='s')return['shield'];if(g.kind==='j')return g.jt==='ring'?['ring1','ring2']:['neck'];
+  const sl=g.sl||'chest';return sl==='wrist'?['lwrist','rwrist']:[sl]}
+function targetSlot(g){const ss=slotsFor(g),e=ss.find(x=>!slotItem(x)||slotItem(x).starter);if(e)return e;return ss.slice().sort((a,b)=>gearVal(slotItem(a))-gearVal(slotItem(b)))[0]}
+const slotOf=g=>targetSlot(g);
+function isUpgrade(g){const cur=slotItem(targetSlot(g));if(!cur)return true;
   if(g.kind==='w'&&!cur.starter&&cur.wt!==g.wt)return false;
   if(g.kind==='a'&&!cur.starter&&cur.at!==g.at)return false;
   return gearVal(g)>gearVal(cur)}
-function equip(g,quiet){
-  const slot=slotOf(g);
+function equip(g,quiet,slotId){
+  const slot=slotId&&slotsFor(g).includes(slotId)?slotId:targetSlot(g);
   if(g.kind==='s'&&wprop(H.weapon).two){log('You cannot use a shield with a two-handed weapon.');stash(g);return false}
   if(g.kind==='w'&&wprop(g).two&&H.shield){stash(H.shield);H.shield=null;log('You sling your shield onto your pack.')}
-  if(H[slot])stash(H[slot]);H[slot]=g;
+  {const old=slotItem(slot);setSlot(slot,g);if(old)stash(old)}
   if(G)G.P.mp=Math.min(G.P.mp,maxMP()),G.P.hp=Math.min(G.P.hp,maxHP());
   if(!quiet)log(`You equip the ${g.n}.`,'good');return true}
 function gainGear(g){
   const auto=isUpgrade(g)&&(g.kind!=='s'||!wprop(H.weapon).two);
-  const sameKind=g.kind==='w'?(H.weapon.starter||H.weapon.wt===g.wt):g.kind==='a'?(H.armor.starter||H.armor.at===g.at):true;
+  const cur=slotItem(targetSlot(g)),sameKind=g.kind==='w'?(H.weapon.starter||H.weapon.wt===g.wt):g.kind==='a'?(!cur||cur.starter||cur.at===g.at):true;
   if(auto&&sameKind){equip(g,true);log(`You equip the ${g.n} (${gearDesc(g)}).`,'good');float(g.n.toUpperCase(),'#9ee080')}
   else{stash(g);log(`You stash the ${g.n}${g.rar?' ('+RARNAME[g.rar].toLowerCase()+')':''}.`,g.rar?'info':'')}
 }
-function stash(g){if(!g||g.starter)return;H.bag.push(g);
-  if(H.bag.length>BAG_MAX){H.bag.sort((a,c)=>sellVal(c)-sellVal(a));const x=H.bag.pop();log(`Pack full; you leave the ${x.n} behind.`)}}
+// ---- Backpack: a Diablo-style grid (BAGW x BAGH cells); every item has a size (isz) and a cell (gx, gy).
+const BAGW=10,BAGH=5;
+function isz(g){if(g.kind==='j')return[1,1];if(g.kind==='s')return g.b>=.2?[2,3]:[2,2];
+  if(g.kind==='a'){const sl=g.sl||'chest';return sl==='chest'?[2,3]:sl==='wrist'?[1,2]:[2,2]}
+  const v=g.var;if(g.wt==='bow')return[2,3];if(g.wt==='thrown')return[2,2];if(g.wt==='dagger'||v==='cestus'||v==='wraps')return[1,2];
+  if(g.wt==='spear'||v==='bo'||v==='staff')return[1,4];return[1,3]}
+function bagGrid(skip){const o=[];for(let y=0;y<BAGH;y++)o.push(new Array(BAGW).fill(null));
+  for(const g of H.bag){if(g===skip||g.gx==null)continue;const[w,h]=isz(g);for(let y=g.gy;y<g.gy+h&&y<BAGH;y++)for(let x=g.gx;x<g.gx+w&&x<BAGW;x++)o[y][x]=g}return o}
+function fitsAt(g,x,y,grid){const[w,h]=isz(g);if(x<0||y<0||x+w>BAGW||y+h>BAGH)return false;for(let j=y;j<y+h;j++)for(let i=x;i<x+w;i++)if(grid[j][i]&&grid[j][i]!==g)return false;return true}
+function findSpot(g){const grid=bagGrid(g);for(let x=0;x<BAGW;x++)for(let y=0;y<BAGH;y++)if(fitsAt(g,x,y,grid))return[x,y];return null}
+function bagAdd(g){const sp=findSpot(g);if(!sp)return false;g.gx=sp[0];g.gy=sp[1];H.bag.push(g);return true}
+const bagFits=g=>!!findSpot(g);
+function stash(g){if(!g||g.starter||g.none)return true;if(bagAdd(g))return true;
+  if(G&&!G.camp&&G.P){G.items.push({k:'gear',g,x:G.P.x,y:G.P.y,ox:0,oy:0,h:0});log(`Your pack is full. You drop the ${g.n}.`,'bad')}
+  else{H.stash=H.stash||[];H.stash.push(g);log(`Your pack is full, so the ${g.n} goes to your stash.`)}
+  return false}
 // Ranged attacks and bolt spells fly where the crosshair points: monsters near the view ray, nearest first.
 function lineMons(range){const P=G.P,fx=Math.sin(P.a),fy=-Math.cos(P.a),out=[];
   for(const m of G.mons){const mx=(m.px??m.x+.5)-P.px,my=(m.py??m.y+.5)-P.py,along=mx*fx+my*fy;if(along<=.15||along>range+.5)continue;
@@ -762,7 +848,7 @@ function rollDmg(m,ranged,sneak){const wt=H.weapon.wt,W=wprop(H.weapon),M=MONS[m
   if(m.boss&&wt==='spear'&&has('spear_50'))d*=1.25;
   let crit=Math.random()<.08+W.crit+affSum('keen')/100+(wt==='dagger'&&has('dagger_50')?.1:0)+(wt==='thrown'&&has('thrown_50')?.15:0);
   if(sneak){d*=sneakMul(wt);if(has('stealth_50'))crit=true}
-  if(crit)d*=2;d*=1+((curBuff()||{}).dmg||0);if(!ranged){if(isGi(H.armor))d*=1.08;if(disc())d*=1.15}return{d:Math.round(d)+affSum('flame'),crit}}
+  if(crit)d*=2;d*=1+((curBuff()||{}).dmg||0);if(!ranged){if(isGi(H.eq.chest))d*=1.08;if(disc())d*=1.15}return{d:Math.round(d)+affSum('flame'),crit}}
 function addSt(m,k,n){m.st=m.st||{};m.st[k]=Math.max(m.st[k]||0,n)}
 function damageMon(m,d,crit,quiet){
   if(crit){HS=performance.now()+70;shake(2.5,160)}
@@ -888,7 +974,7 @@ function kill(m){
 // ================= MONSTERS =================
 function monstersAct(){
   const P=G.P,d=bfs(G.map,P.x,P.y,t=>t!==WALL);
-  const metal=H.armor.at==='metal',sv=stealthVal()+(P.sneak?(metal?12:35):0),far=clamp(Math.round(7-sv/15-(has('stealth_25')?2:0)),2,7),near=P.sneak?(sv>=(metal?60:20)?0:1):clamp(Math.round(3-sv/40),1,3);
+  const metal=armShare('metal')>=.5,sv=stealthVal()+(P.sneak?(metal?12:35):0),far=clamp(Math.round(7-sv/15-(has('stealth_25')?2:0)),2,7),near=P.sneak?(sv>=(metal?60:20)?0:1):clamp(Math.round(3-sv/40),1,3);
   const face=(m,tx,ty)=>{const dx=tx-m.x,dy=ty-m.y;m.f=Math.abs(dx)>Math.abs(dy)?(dx>0?1:3):(dy>0?2:0)};
   for(const m of G.mons.slice()){
     if(!G.mons.includes(m))continue;
@@ -934,15 +1020,15 @@ function monAttack(m){
     if(has('block_50')){addSt(m,'stun',1);log(`Shield bash! The ${mname(m)} is stunned.`)}return}}
   if(Math.random()<BAL.mhit+Math.min(G.depth,25)*BAL.mhitd+Math.max(0,G.depth-BAL.deepStart)*BAL.deepHit+(m.boss?.06:0)-armorVal()*.035){
     const deep=Math.max(0,G.depth-BAL.deepStart);let raw=ri(M.dmg[0],M.dmg[1])+Math.round((m.lv||0)*BAL.mdmg+deep*BAL.deepDmg);if(m.boss)raw=Math.round(raw*BAL.bossDmg);
-    let dmg=Math.max(1,raw-(armorVal()>>1)-(H.armor.at==='metal'&&has('metal_50')?2:0));
-    train(H.armor.at,1);
+    let dmg=Math.max(1,raw-(armorVal()>>1)-(has('metal_50')?Math.round(2*armShare('metal')):0));
+    for(const at of['cloth','leather','metal']){const sh=armShare(at);if(sh>.05)train(at,sh)}
     if(P.ward>0){const ab=Math.min(P.ward,dmg);P.ward-=ab;dmg-=ab;if(ab)float('WARD -'+ab,'#ffe080');if(P.ward<=0)log('Your ward shatters.')}
-    if(dmg>0&&has('cloth_50')&&H.armor.at==='cloth'){const ms=Math.min(P.mp,Math.round(dmg*.25));P.mp-=ms;dmg-=ms}
+    if(dmg>0&&has('cloth_50')&&armShare('cloth')>=.6){const ms=Math.min(P.mp,Math.round(dmg*.25));P.mp-=ms;dmg-=ms}
     if(dmg>0){P.hp-=dmg;SFX.hurt();FX.hurt=performance.now();FX.ind[rel]=performance.now();shake(Math.min(7,2+dmg*.6),260);
       log(`The ${mname(m)} hits you${side?' '+side:''} for ${dmg}.`,'bad')}
     else log(`Your defenses absorb the ${mname(m)}'s blow.`,'good');
     if(has('nature_25')){m.hp-=2;if(m.hp<=0){log(`Thorns finish the ${mname(m)}.`,'good');kill(m)}}
-    if(P.hp>0&&P.hp<maxHP()*.25&&has('leather_50')&&H.armor.at==='leather'&&!P.sw){P.sw=1;const h=heal(Math.round(maxHP()*.3));log(`Second wind! You recover ${h} HP.`,'good')}
+    if(P.hp>0&&P.hp<maxHP()*.25&&has('leather_50')&&armShare('leather')>=.5&&!P.sw){P.sw=1;const h=heal(Math.round(maxHP()*.3));log(`Second wind! You recover ${h} HP.`,'good')}
   }else{log(`The ${mname(m)} misses you.`);if(rel)FX.ind[rel]=performance.now()-250;
     if(H.weapon.wt==='sword'&&has('sword_25')&&rel===0&&Math.random()<.2){log('Riposte!','good');strike(m,false)}}
 }
@@ -1432,7 +1518,17 @@ const GICON={
  cloth:mirror6(["...kkk","..kccy",".kcccy","kccccy","kcckcy",".kkkcy","...kcy","...kcc","..kccc","..kccc",".kcccc",".kkkkk"]),
  leather:mirror6(["..kk..",".kbbkk","kbbbbb","kbbbbl","kbkbbb",".kkbbl","..kbbb","..kbbl","..kbbb","..kkkk"]),
  metal:mirror6(["..kk..",".kmmkk","kmmmmm","kmwmmn","kmkmmm",".kkmmn","..kmmm","..kmmn","..knnn","..kkkk"]),
- shield:mirror6(["kkkkkk","kmmmmm","kmbbbb","kmbbyy","kmbyyy","kmbbyy",".kmbbb",".kmbbb","..kmbb","...kmb","....kk"])};
+ shield:mirror6(["kkkkkk","kmmmmm","kmbbbb","kmbbyy","kmbyyy","kmbbyy",".kmbbb",".kmbbb","..kmbb","...kmb","....kk"]),
+ a_head:P12(["","...kkkkkk...","..kwmmmmmk..",".kwmmmmmmnk.",".kwmmmmmmnk.",".kmkkkkkkmk.",".kmk....kmk.",".kmkk..kkmk.",".kmmk..kmnk.","..kmk..knk..","...kk..kk..."]),
+ a_arms:P12(["","..kkkkk.....",".kwmmmmk....","kwmmmmmnk...","kmmmmmmnk...","kkmmmmnnk...",".kkkkmmnk...",".....kmmnk..","......kmnk..",".......kmnk.","........kkk."]),
+ a_wrist:P12(["","...kkkkkk...","..kwmmmmnk..","..kmyyyynk..","..kmmmmmnk..","..kmmmmmnk..","..kmmmmmnk..","..kmyyyynk..","..kwmmmmnk..","...kkkkkk..."]),
+ a_hands:P12(["....k.k.k...","...kmkmkmk..","...kmkmkmk..","..kkmkmkmk..",".kmkmmmmmk..",".kmmmmmmnk..","..kmmmmmnk..","..kmmmmnk...","...kyyyyk...","...kmmmnk...","...kkkkkk..."]),
+ a_legs:P12(["","..kkkkkkkk..","..kyyyyyyk..","..kmmmmmnk..","..kmmkkmnk..","..kmmkkmnk..","..kmnk.kmnk.","..kmnk.kmnk.","..kmnk.kmnk.","..kmnk.kmnk.","..kkkk.kkkk."]),
+ a_feet:P12(["","....kkkk....","....kmmnk...","....kmmnk...","....kmmnk...","....kmmnk...","....kmmmnk..","..kkkmmmmnk.",".kwmmmmmmnk.",".kmmmmmmmnk.",".kkkkkkkkkk."]),
+ ring:P12(["",".....kk.....","....kppk....","....kpwk....","...kkkkkk...","..kmk..kmk..",".kmk....knk.",".kmk....knk.",".kmk....knk.","..kmk..knk..","...kmmmnk...","....kkkk...."]),
+ amulet:P12(["..k......k..","...k....k...","....k..k....",".....kk.....","....kmmk....","...kmppmk...","...kmpwmk...","...kmppmk...","....kmmk....",".....kk....."])};
+const shadeHex=(h,f)=>{const n=parseInt(h.slice(1),16),c=v=>Math.max(0,Math.min(255,Math.round(v*f)));return'#'+[n>>16&255,n>>8&255,n&255].map(v=>c(v).toString(16).padStart(2,'0')).join('')};
+const GEMC=['#c86a3a','#d8d8e8','#e8c040','#e8e070','#80c0ff','#c080ff','#ff6a5a','#9af0ff','#a040ff'];
 const MTL=[['#8a8a92','#5a5a62','#c8c8d0'],['#a8aab4','#6a6c76','#e8e8f0'],['#9aa0b0','#5a6070','#d8e0f0'],['#b4b4bc','#74747c','#f0f0f4'],['#9ab8d8','#5a7898','#e0f0ff'],
  ['#a08ad8','#5a4a98','#e0d0ff'],['#d8ccb0','#9a8a6a','#fff4dc'],['#6a9a7a','#3a5a4a','#b0e0c0'],['#6a4a8a','#2a1a3a','#c090f0']];
 const CLOTHC=['#d8ccb0','#8a7a6a','#7a8a5a','#c8a0d8','#e8e8f0','#6a50b8','#c83a2a','#3a4a9a','#4a2a5a'];
@@ -1440,11 +1536,13 @@ const LEATHC=['#b08a5a','#8a5a30','#6a4020','#5a3a20','#4a7a3a','#5a4a7a','#8a2a
 const WOODC=['#c8a878','#a07040','#6a5a50','#d8c8a0','#5a7a4a','#6a5aa0','#e0d4b8','#8090c0','#4a2a6a'];
 const GICACHE={};
 function gearIconTex(g){
-  const ti=Math.max(0,TIERS.findIndex(x=>x.t===g.t)),type=g.kind==='w'?(g.var==='knife'?'knife':g.var==='shuriken'?'shuriken':g.var==='wraps'?'wraps':g.var==='bo'?'bo':g.var==='staff'?'wstaff':g.var==='cleric'?'cmace':g.wt):g.kind==='a'?(isGi(g)?'gi':g.at):'shield',key=type+ti+(g.starter?'s':'');
+  const ti=Math.max(0,TIERS.findIndex(x=>x.t===g.t)),type=g.kind==='j'?(g.jt==='ring'?'ring':'amulet'):g.kind==='a'&&g.sl&&g.sl!=='chest'?'a_'+g.sl:g.kind==='w'?(g.var==='knife'?'knife':g.var==='shuriken'?'shuriken':g.var==='wraps'?'wraps':g.var==='bo'?'bo':g.var==='staff'?'wstaff':g.var==='cleric'?'cmace':g.wt):g.kind==='a'?(isGi(g)?'gi':g.at):'shield',key=type+(type.startsWith('a_')?g.at:'')+ti+(g.starter?'s':'');
   if(GICACHE[key])return GICACHE[key];
   const m=g.starter?['#7a6a5a','#4a3a2a','#a89888']:MTL[ti],pal={m:m[0],n:m[1],w:m[2],b:'#7a4a24',y:'#c8a040',l:'#e8d8b0',c:CLOTHC[ti]};
   if(type==='bow'||type==='bo'||type==='wstaff')pal.b=WOODC[ti];pal.p='#c080ff';if(type==='leather')pal.b=LEATHC[ti];if(type==='cloth'&&g.starter)pal.c='#a89880';
   if(type==='shield'){pal.b=ti<1?'#8a5a2a':'#3050a0'}
+  if(type.startsWith('a_')&&g.at!=='metal'){const c=g.at==='leather'?LEATHC[ti]:CLOTHC[ti];pal.m=c;pal.n=shadeHex(c,.65);pal.w=shadeHex(c,1.3);pal.y=g.at==='leather'?'#c8a040':shadeHex(c,.8)}
+  if(type==='ring'||type==='amulet'){const j=[['#b87333','#7a4a20','#e8a870'],['#c8c8d0','#7a7a84','#f4f4fa'],['#e8c040','#9a7a20','#fff0a0']][Math.min(2,ti%3)];pal.m=j[0];pal.n=j[1];pal.w=j[2];pal.p=GEMC[ti]}
   const tex=makeTex(GICON[type],pal);return GICACHE[key]={tex,u:texURL(tex)}}
 
 const gearIcon=g=>gearIconTex(g).u;
@@ -1456,14 +1554,114 @@ function bagLines(sell,mult=1,vi=-1){let h='';
   H.bag.forEach((g,i)=>{const up=isUpgrade(g);
     h+=`<div class="line">${gimg(g)}<span class="t">${gname(g)}<br><small>${gearDesc(g)}${up?' · <span class="good">upgrade</span>':''}</small></span><button data-cmd="equip" data-i="${i}">EQUIP</button>${sell?`<button data-cmd="sell" data-i="${i}" data-m="${mult}" data-v="${vi}">SELL<span class="coin">+${Math.round(sellVal(g)*mult)}G</span></button>`:''}</div>`});
   return h}
+// ================= INVENTORY =================
+// Paperdoll (13 slots around the hero's avatar), stats with numbers and percentages, and a Diablo-style
+// backpack where items have sizes. Click an item for details; drag it to move, drop it on a slot to equip,
+// drag a worn item into the pack to take it off. Right-click / double-click quick-equips or unequips.
+let invSel=null;
+const DOLLSLOTS=['head','neck','chest','ring1','arms','ring2','lwrist','rwrist','hands','legs','weapon','feet','shield'];
+const pctS=v=>Math.round(v*100)+'%';
+function invStats(){const P=G?G.P:null,W=wprop(H.weapon),wt=H.weapon.wt,ranged=!!W.range,b=dmgBonus()+(!ranged&&has('melee_25')?1:0);
+  const mul=(1+eff(wt)*.006)*(1+eff(ranged?'ranged':'melee')*.003)*(1+affSum('vicious')/100)*(1+((curBuff()||{}).dmg||0))*(!ranged&&isGi(H.eq.chest)?1.08:1)*(!ranged&&disc()?1.15:1);
+  const dmin=Math.round((H.weapon.d[0]+b)*mul)+affSum('flame'),dmax=Math.round((H.weapon.d[1]+b)*mul)+affSum('flame');
+  const crit=.08+(W.crit||0)+affSum('keen')/100+(wt==='dagger'&&has('dagger_50')?.1:0)+(wt==='thrown'&&has('thrown_50')?.15:0);
+  const hit=Math.min(.98,hitCh({t:0,lv:0},ranged)+(MONS[0].def||0)*.04);
+  const sp=k=>pctS(spellPow(k)-1).replace(/^(?!-)/,'+');
+  return[['Health',`${P?P.hp+' / ':''}${maxHP()}`],['Mana',`${P?P.mp+' / ':''}${maxMP()}`],['Damage',`${dmin} - ${dmax}`],['Attacks per second',(1000/weaponCD()).toFixed(2)],
+   ['Hit chance (vs. unarmored)',pctS(hit)],['Critical chance',pctS(Math.min(.95,crit))+' (x2 dmg)'],['Sneak attack',`x${sneakMul(wt)}`],['Armor',`${armorVal()}  (blocks ~${armorVal()>>1} per hit)`],
+   ['Dodge',pctS(dodgeCh())],['Block',pctS(blockCh())],['Stealth',Math.max(0,Math.round(stealthVal()))],['Spell power',`Holy ${sp('holy')} · Nature ${sp('nature')} · Arcane ${sp('arcane')}`],
+   ['Armor weight',`Cloth ${pctS(armShare('cloth'))} · Leather ${pctS(armShare('leather'))} · Metal ${pctS(armShare('metal'))}`],['Move speed',P&&P.sneak?'50% (sneaking)':'100%'],
+   ['Gold',G&&!G.camp?`${G.P.gold} carried · ${H.bank} banked`:`${H.bank} banked`],['Potions',`${H.potions} / ${POTION_MAX}`]]}
+function invCard(){const sel=invSel,g=sel?(sel.from==='bag'?H.bag[sel.i]:slotItem(sel.slot)):null;
+  if(!g)return`<div class="icard"><div class="nm">${sel&&sel.slot?EQNAME[sel.slot].toUpperCase()+': EMPTY':'SELECT AN ITEM'}</div><small>Click an item to see it. Drag items to move them, drop them on a slot to equip. Right-click to quick-equip or take off.</small></div>`;
+  let h=`<div class="icard"><div class="nm ${RARCLS[g.rar||0]||''}">${g.n.toUpperCase()}</div><small>${g.rar?RARNAME[g.rar]+' · ':''}${gearDesc(g)}</small>`;
+  if(sel.from==='bag'){const cur=slotItem(targetSlot(g));if(cur&&cur!==g&&!cur.none)h+=`<div class="cmp">Worn: ${cur.n} (${g.kind==='w'?cur.d.join('-')+' dmg':g.kind==='j'?'jewelry':cur.a+' armor'})${isUpgrade(g)?' · <span class="good">this is better</span>':''}</div>`}
+  h+='<div class="btns">';
+  if(sel.from==='bag'){h+=`<button data-cmd="iequip">EQUIP</button>`;if(G&&!G.camp)h+=`<button data-cmd="idrop">DROP</button>`}
+  else if(sel.slot!=='weapon'&&!g.starter)h+=`<button data-cmd="iunequip">TAKE OFF</button>`;
+  return h+'</div></div>'}
 function openBag(){
-  let h=`<h2>PACK</h2><p class="dim">${G.P.gold} gold carried · ${H.potions}/${POTION_MAX} potions</p><h3>EQUIPPED</h3>`;
-  h+=gearLine(H.weapon,'Weapon')+gearLine(H.shield,'Off-hand')+gearLine(H.armor,'Armor');
-  h+=`<h3>PACK (${H.bag.length}/${BAG_MAX})</h3>`+bagLines(false);
+  const c=Math.max(26,Math.min(38,Math.floor((innerWidth/uiScale()-60)/10)));
+  let h=`<div class="inv" style="--c:${c}px"><h2>${H.name.toUpperCase()} · LEVEL ${H.lvl}</h2><div class="invtop"><div class="doll"><canvas id="avatar" width="34" height="60"></canvas>`;
+  for(const k of DOLLSLOTS){const g=slotItem(k),sel=invSel&&invSel.from==='slot'&&invSel.slot===k;
+    h+=`<button class="slot r${g?g.rar||0:0}${sel?' sel':''}" style="grid-area:${k}" data-cmd="isel" data-slot="${k}">${g&&!g.none?`<img src="${gearIcon(g)}">`:`<span class="lb">${EQNAME[k].replace(' ','<br>')}</span>`}</button>`}
+  h+=`</div><div class="istats"><h3>STATS</h3>${invStats().map(([k,v])=>`<div class="srow"><span>${k}</span><b>${v}</b></div>`).join('')}</div></div>`;
+  h+=`<div class="invmid"><div><h3 style="margin:0 0 4px">PACK</h3><div class="bag" id="bag">`;
+  H.bag.forEach((g,i)=>{if(g.gx==null)return;const[w,hh]=isz(g),sel=invSel&&invSel.from==='bag'&&invSel.i===i;
+    h+=`<button class="it r${g.rar||0}${sel?' sel':''}${isUpgrade(g)?' up':''}" data-cmd="isel" data-i="${i}" style="left:${g.gx*c}px;top:${g.gy*c}px;width:${w*c}px;height:${hh*c}px"><img src="${gearIcon(g)}"></button>`});
+  h+=`</div></div><div id="icardw">${invCard()}</div></div>`;
   h+=G&&!G.camp?`<h3>MATERIALS CARRIED</h3>${matsSummary(G.P.mats||{})}<p class="dim" style="font-size:16px;text-align:left">Banked when you return to camp. Half are lost if you die.</p>`:`<h3>MATERIALS</h3>${matsSummary()}`;
-  h+=`<button class="wide" data-cmd="menu">OPTIONS</button><button class="wide gold" data-cmd="close">CLOSE</button>`;
-  $('bagbox').innerHTML=h;if(!$('bagov').classList.contains('show'))show('bagov');
-}
+  h+=`<button class="wide" data-cmd="char">SKILLS &amp; PERKS</button><button class="wide gold" data-cmd="close">CLOSE</button></div>`;
+  const box=$('bagbox');box.classList.add('inv');box.innerHTML=h;if(!$('bagov').classList.contains('show'))show('bagov');
+  drawAvatar($('avatar'))}
+function invEquipBag(i,slotId){const g=H.bag[i];if(!g)return;
+  if(slotId&&!slotsFor(g).includes(slotId))return;
+  H.bag.splice(i,1);const ok=equip(g,true,slotId);if(!ok){}SFX.pick();invSel={from:'slot',slot:slotId||Object.keys(H.eq).find(k=>H.eq[k]===g)||(H.weapon===g?'weapon':H.shield===g?'shield':null)};
+  if(!invSel.slot)invSel=null;afterInv()}
+function invUnequip(slot,gx,gy){const g=slotItem(slot);if(!g||g.starter||slot==='weapon')return false;
+  if(gx!=null){if(!fitsAt(g,gx,gy,bagGrid()))return false;setSlot(slot,null);g.gx=gx;g.gy=gy;H.bag.push(g)}
+  else{if(!bagFits(g)){log('No room in your pack.','bad');return false}setSlot(slot,null);bagAdd(g)}
+  invSel={from:'bag',i:H.bag.indexOf(g)};afterInv();return true}
+function afterInv(){if(G){G.P.hp=Math.min(G.P.hp,maxHP());G.P.mp=Math.min(G.P.mp,maxMP())}save();hud();hbSig='';openBag()}
+// Drag and drop (mouse and touch): pick an item up from the pack or a slot, drop it on a free spot in the
+// pack (move / take off) or on a slot (equip / swap rings and wrists). A short tap is a normal click.
+let IDR=null,iDragEnd=0;
+(()=>{const box=$('bagbox');
+  const itemOf=el=>el.dataset.slot?slotItem(el.dataset.slot):H.bag[+el.dataset.i];
+  const clearHi=()=>{box.querySelectorAll('.cell-ok,.cell-no').forEach(x=>x.remove());box.querySelectorAll('.slot.ok,.slot.no').forEach(x=>x.classList.remove('ok','no'))};
+  const target=(x,y)=>{if(IDR.ghost)IDR.ghost.style.display='none';const el=document.elementFromPoint(x,y);if(IDR.ghost)IDR.ghost.style.display='';
+    const sl=el&&el.closest('.slot');if(sl)return{slot:sl.dataset.slot,el:sl};const bag=$('bag'),r=bag&&bag.getBoundingClientRect();
+    if(r&&x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom){const cs=r.width/BAGW;return{bag:true,cx:Math.floor((x-r.left)/cs)-Math.floor(IDR.ox),cy:Math.floor((y-r.top)/cs)-Math.floor(IDR.oy),cs,r}}return null};
+  box.addEventListener('pointerdown',e=>{const el=e.target.closest('.it,.slot');if(!el||!box.classList.contains('inv'))return;const g=itemOf(el);if(!g||g.none)return;
+    const[w,h]=isz(g),r=el.getBoundingClientRect(),bag=$('bag'),cs=bag?bag.getBoundingClientRect().width/BAGW:34;
+    IDR={el,g,src:el.dataset.slot?{slot:el.dataset.slot}:{i:+el.dataset.i},x:e.clientX,y:e.clientY,w,h,cs,
+      ox:el.dataset.slot?w/2-.5:Math.floor((e.clientX-r.left)/cs),oy:el.dataset.slot?h/2-.5:Math.floor((e.clientY-r.top)/cs),drag:false}});
+  window.addEventListener('pointermove',e=>{if(!IDR)return;if(!IDR.drag){if(Math.hypot(e.clientX-IDR.x,e.clientY-IDR.y)<7)return;IDR.drag=true;
+      const gh=document.createElement('div');gh.id='iDrag';gh.style.width=IDR.w*IDR.cs+'px';gh.style.height=IDR.h*IDR.cs+'px';gh.innerHTML=`<img src="${gearIcon(IDR.g)}">`;document.body.appendChild(gh);IDR.ghost=gh;IDR.el.style.opacity=.35}
+    IDR.ghost.style.left=(e.clientX-(IDR.ox+.5)*IDR.cs)+'px';IDR.ghost.style.top=(e.clientY-(IDR.oy+.5)*IDR.cs)+'px';
+    clearHi();const t=target(e.clientX,e.clientY);if(!t)return;
+    if(t.slot){t.el.classList.add(slotsFor(IDR.g).includes(t.slot)?'ok':'no')}
+    else{const ok=fitsAt(IDR.g,t.cx,t.cy,bagGrid(IDR.g)),d=document.createElement('div'),z=parseFloat(getComputedStyle(box).zoom)||1;d.className=ok?'cell-ok':'cell-no';
+      const c=t.cs/z;d.style.cssText=`left:${t.cx*c}px;top:${t.cy*c}px;width:${IDR.w*c}px;height:${IDR.h*c}px`;$('bag').appendChild(d)}});
+  window.addEventListener('pointerup',e=>{if(!IDR)return;const D=IDR;IDR=null;if(!D.drag)return;iDragEnd=performance.now();clearHi();if(D.ghost)D.ghost.remove();D.el.style.opacity='';
+    IDR=D;const t=target(e.clientX,e.clientY);IDR=null;if(!t){openBag();return}
+    if(t.slot){if(!slotsFor(D.g).includes(t.slot)){openBag();return}
+      if(D.src.i!=null)invEquipBag(D.src.i,t.slot);
+      else if(D.src.slot!==t.slot){const a=slotItem(D.src.slot),b2=slotItem(t.slot);setSlot(t.slot,a);setSlot(D.src.slot,b2);invSel={from:'slot',slot:t.slot};afterInv()}
+      else openBag();return}
+    if(D.src.i!=null){if(fitsAt(D.g,t.cx,t.cy,bagGrid(D.g))){D.g.gx=t.cx;D.g.gy=t.cy;invSel={from:'bag',i:D.src.i};afterInv()}else openBag()}
+    else if(!invUnequip(D.src.slot,t.cx,t.cy))openBag()});
+  box.addEventListener('contextmenu',e=>{const el=e.target.closest('.it,.slot');if(!el||!box.classList.contains('inv'))return;e.preventDefault();
+    if(el.dataset.slot)invUnequip(el.dataset.slot);else invEquipBag(+el.dataset.i)});
+  box.addEventListener('dblclick',e=>{const el=e.target.closest('.it,.slot');if(!el||!box.classList.contains('inv'))return;
+    if(el.dataset.slot)invUnequip(el.dataset.slot);else invEquipBag(+el.dataset.i)})})();
+// Hero avatar: a little pixel figure dressed in whatever you wear (colors come from each item's material).
+function itemCol(g){const ti=Math.max(0,TIERS.findIndex(x=>x.t===g.t));if(g.starter)return'#9a8a70';
+  if(g.kind==='a')return g.at==='metal'?MTL[ti][0]:g.at==='leather'?LEATHC[ti]:CLOTHC[ti];return MTL[ti][0]}
+function drawAvatar(c){if(!c)return;const g=c.getContext('2d'),R=(x,y,w,h,col)=>{g.fillStyle=col;g.fillRect(x,y,w,h)};g.clearRect(0,0,c.width,c.height);
+  let hs=0;for(const ch of H.name)hs=(hs*31+ch.charCodeAt(0))>>>0;
+  const skin=['#e8c0a0','#d8a880','#b88060','#8a5a3a'][hs%4],hair=['#3a2a1a','#6a4a2a','#c8a060','#1a1a1a','#8a3a1a'][(hs>>3)%5],E=H.eq;
+  const sh=(col,f)=>shadeHex(col,f),X=10;
+  // shadow, legs, feet, torso, arms, head
+  R(X-2,57,18,2,'rgba(0,0,0,.45)');
+  const legC=E.legs?itemCol(E.legs):'#5a4632',feetC=E.feet?itemCol(E.feet):'#3a2a1c',chC=E.chest&&!E.chest.none?itemCol(E.chest):'#8a7656';
+  R(X+2,34,5,20,legC);R(X+8,34,5,20,legC);R(X+6,34,1,20,sh(legC,.6));
+  R(X+1,52,7,5,feetC);R(X+8,52,7,5,feetC);if(E.feet){R(X+1,50,6,2,feetC);R(X+8,50,6,2,feetC)}
+  R(X+1,18,13,17,chC);R(X+1,18,2,17,sh(chC,1.2));R(X+12,18,2,17,sh(chC,.7));
+  if(isRobe(E.chest)){R(X+1,34,13,16,chC);R(X+7,34,1,16,sh(chC,.7))}
+  if(isGi(E.chest)){R(X+1,31,13,2,'#2a1a10');R(X+6,18,3,8,sh(chC,.75))}
+  else if(E.chest&&!E.chest.none&&E.chest.at!=='cloth')R(X+1,31,13,2,sh(chC,.55));
+  const armC=E.arms?itemCol(E.arms):chC;R(X-3,19,4,13,armC);R(X+14,19,4,13,armC);
+  if(!E.arms){R(X-3,26,4,6,skin);R(X+14,26,4,6,skin)}
+  for(const [sl,x] of[['lwrist',X-3],['rwrist',X+14]])if(E[sl])R(x,28,4,3,itemCol(E[sl]));
+  const handC=E.hands?itemCol(E.hands):skin;R(X-3,32,4,4,handC);R(X+14,32,4,4,handC);
+  R(X+5,15,5,3,skin);R(X+3,5,9,10,skin);R(X+5,9,2,2,'#1a1210');R(X+9,9,2,2,'#1a1210');R(X+6,13,3,1,sh(skin,.7));
+  if(E.head){const hc=itemCol(E.head);if(E.head.at==='metal'){R(X+2,3,11,7,hc);R(X+2,10,2,4,hc);R(X+11,10,2,4,hc);R(X+3,8,9,1,sh(hc,.5));R(X+3,3,9,1,sh(hc,1.3))}
+    else if(E.head.at==='cloth'){R(X+1,3,13,5,hc);R(X+1,8,2,9,hc);R(X+12,8,2,9,hc)}else{R(X+2,3,11,4,hc);R(X+2,7,11,1,sh(hc,.6))}}
+  else{R(X+3,3,9,3,hair);R(X+2,4,2,6,hair);R(X+11,4,2,6,hair)}
+  if(E.neck){R(X+6,18,3,1,'#c8a040');R(X+7,19,1,2,GEMC[Math.max(0,TIERS.findIndex(x=>x.t===E.neck.t))])}
+  const icon=(it,x,y,s)=>{const t=gearIconTex(it).tex,cv=document.createElement('canvas');cv.width=t.w;cv.height=t.h;const cg=cv.getContext('2d'),id=cg.createImageData(t.w,t.h);new Uint32Array(id.data.buffer).set(t.d);cg.putImageData(id,0,0);g.drawImage(cv,x,y,s,s)};
+  icon(H.weapon,X+12,20,14);if(H.shield)icon(H.shield,X-9,24,13)}
 function openCast(){
   const P=G.P;let h=`<h2>SPELLS</h2><p class="dim">Mana ${P.mp}/${maxMP()}. Casting a spell here also readies it: tap CAST to cast it again, or hold CAST to come back here.</p>`;
   for(const [sc,label] of [['holy','HOLY'],['nature','NATURE'],['arcane','ARCANE']]){
@@ -1536,9 +1734,9 @@ function newCampVisit(){
   const mt=Object.keys(MERCH).sort(()=>Math.random()-.5).slice(0,2),et=pick(Object.keys(EVENTS)),il=Math.max(1,H.waypoint);
   const mk=t=>{const v={kind:'merchant',type:t,name:pick(VISNAMES),stock:[]};
     if(t==='weaponsmith')for(let i=0;i<5;i++)v.stock.push({g:stockGear('w',il,i<2?H.weapon.wt:null)});
-    if(t==='armorer'){for(let i=0;i<3;i++)v.stock.push({g:stockGear('a',il,i<2?H.armor.at:null)});for(let i=0;i<2;i++)v.stock.push({g:stockGear('s',il)})}
+    if(t==='armorer'){for(let i=0;i<4;i++)v.stock.push({g:stockGear('a',il,i<2?domArmor():null)});for(let i=0;i<2;i++)v.stock.push({g:stockGear('s',il)})}
     if(t==='alchemist'){v.stock.push({pot:1});for(const e of [...ELIXIRS].sort(()=>Math.random()-.5).slice(0,3))v.stock.push({el:e.k})}
-    if(t==='mystic'){v.stock.push({g:stockGear('w',il+2,null,1)},{g:stockGear('as',il+2,null,1)});
+    if(t==='mystic'){v.stock.push({g:stockGear('w',il+2,null,1)},{g:stockGear('as',il+2,null,1)},{g:stockGear('j',il+1,null,1)},{g:stockGear('j',il+2,null,1)});
       const ks=Object.keys(SKILLS).sort(()=>Math.random()-.5).slice(0,2);for(const k of ks)v.stock.push({tome:k})}
     if(t==='fence')for(let i=0;i<3;i++)v.stock.push({g:rollGear(il+1)});
     return v};
@@ -1593,7 +1791,7 @@ function openQuarter(note){
 }
 function openStash(note){
   H.stash=H.stash||[];
-  let h=`<h2>YOUR STASH</h2><p class="dim">${note||'Gear kept here is safe, even if you die.'}</p><h3>IN YOUR PACK (${H.bag.length}/${BAG_MAX})</h3>`;
+  let h=`<h2>YOUR STASH</h2><p class="dim">${note||'Gear kept here is safe, even if you die.'}</p><h3>IN YOUR PACK (${H.bag.length} item${H.bag.length===1?'':'s'})</h3>`;
   if(!H.bag.length)h+='<p class="dim" style="text-align:left">Your pack is empty.</p>';
   H.bag.forEach((g,i)=>h+=`<div class="line">${gimg(g)}<span class="t">${gname(g)}<br><small>${gearDesc(g)}</small></span><button data-cmd="store" data-i="${i}" ${H.stash.length>=STASH_MAX?'disabled':''}>STORE</button></div>`);
   h+=`<h3>MATERIALS (ALWAYS SAFE)</h3>${matsSummary()}<h3>IN YOUR STASH (${H.stash.length}/${STASH_MAX})</h3>`;
@@ -1670,7 +1868,7 @@ function resolveEvent(vi,o){
 }
 function buyFromVisitor(vi,i){
   const v=H.camp.vis[vi],s=v.stock[i];commitVisitor(vi);let msg='';
-  if(s.g){const p=buyPrice(s.g,v.type);if(H.bank<p||H.bag.length>=BAG_MAX)return;H.bank-=p;const g=s.g;v.stock.splice(i,1);
+  if(s.g){const p=buyPrice(s.g,v.type);if(H.bank<p||(!isUpgrade(s.g)&&!bagFits(s.g)))return;H.bank-=p;const g=s.g;v.stock.splice(i,1);
     if(isUpgrade(g)&&(g.kind!=='s'||!wprop(H.weapon).two)){equip(g,true);msg=`You buy and equip the ${g.n}.`}else{stash(g);msg=`You buy the ${g.n}. It's in your pack.`}}
   else if(s.pot){if(H.bank<15||H.potions>=POTION_MAX)return;H.bank-=15;H.potions++;msg='You buy a healing potion.'}
   else if(s.el){const E=ELIXIRS.find(e=>e.k===s.el),p=40+H.waypoint*8;if(H.bank<p)return;H.bank-=p;addBuff(E.k,E.v);v.stock.splice(i,1);msg=`You buy the ${E.n}: ${E.d}.`}
@@ -1745,16 +1943,17 @@ function bankMats(){const P=G&&G.P;if(!P||!P.mats)return 0;let t=0;for(const k i
 function loseHalfMats(){const P=G.P,lost={};if(!P.mats)return 0;let t=0;for(const k in P.mats){const keep=Math.floor(P.mats[k]/2);t+=P.mats[k]-keep;H.mats[k]=(H.mats[k]||0)+keep}P.mats={};return t}
 function salvageYield(g){const ti=Math.max(0,TIERS.findIndex(x=>x.t===g.t));let c='ore';
   if(g.kind==='w'){c=g.wt==='bow'||g.var==='bo'||g.var==='staff'?'wood':g.var==='wraps'?'cloth':'ore'}else if(g.kind==='a')c=g.at==='metal'?'ore':g.at==='leather'?'hide':'cloth';
-  const out={};out[matKey(c,ti)]=g.kind==='a'?3:2;if(g.rar)out.dust=g.rar*2;return out}
+  const out={};out[matKey(c,ti)]=g.kind==='a'?Math.max(1,Math.round(9*SLOTDEF[g.sl||'chest'].sh)):g.kind==='j'?1:2;if(g.kind==='j'){delete out[matKey(c,ti)];out.dust=1+(g.rar||0)};if(g.rar)out.dust=g.rar*2;return out}
 const yieldText=y=>Object.entries(y).map(([k,n])=>`${n} ${matLabel(k)}`).join(', ');
 // --- recipes
 const STATIONS={
  forge:{n:'The Forge',sk:'smith',mat:'ore',d:'Hammer ore into weapons, armor and shields. You can also salvage unwanted gear here.',
    r:[['Sword',{kind:'w',wt:'sword'},3],['Axe',{kind:'w',wt:'axe'},3],['Mace',{kind:'w',wt:'blunt',var:'mace'},3],["Cleric's Mace",{kind:'w',wt:'blunt',var:'cleric'},3],['Dagger',{kind:'w',wt:'dagger'},2],['Spear',{kind:'w',wt:'spear'},3],
       ['Cestus',{kind:'w',wt:'martial',var:'cestus'},2],['Javelins',{kind:'w',wt:'thrown',var:'javelin'},3],['Throwing Knives',{kind:'w',wt:'thrown',var:'knife'},2],['Shurikens',{kind:'w',wt:'thrown',var:'shuriken'},2],
-      ['Metal Armor',{kind:'a',at:'metal'},5],['Shield',{kind:'s'},4]]},
- tanner:{n:'Tanning Rack',sk:'leatherwork',mat:'hide',d:'Stretch and cure hides into leather armor.',r:[['Leather Armor',{kind:'a',at:'leather'},4]]},
- loom:{n:'The Loom',sk:'tailor',mat:'cloth',d:'Weave caster robes, fighting gis and handwraps.',r:[['Robe',{kind:'a',at:'cloth',var:null},4],['Gi',{kind:'a',at:'cloth',var:'gi'},4],['Handwraps',{kind:'w',wt:'martial',var:'wraps'},2]]},
+      ['Metal Armor',{kind:'a',at:'metal',sl:'chest'},5],['Helm',{kind:'a',at:'metal',sl:'head'},3],['Pauldrons',{kind:'a',at:'metal',sl:'arms'},2],['Bracers',{kind:'a',at:'metal',sl:'wrist'},1],
+      ['Gauntlets',{kind:'a',at:'metal',sl:'hands'},2],['Greaves',{kind:'a',at:'metal',sl:'legs'},3],['Sabatons',{kind:'a',at:'metal',sl:'feet'},2],['Shield',{kind:'s'},4]]},
+ tanner:{n:'Tanning Rack',sk:'leatherwork',mat:'hide',d:'Stretch and cure hides into leather armor.',r:[['Leather Armor',{kind:'a',at:'leather',sl:'chest'},4],['Leather Cap',{kind:'a',at:'leather',sl:'head'},2],['Leather Sleeves',{kind:'a',at:'leather',sl:'arms'},2],['Leather Bracers',{kind:'a',at:'leather',sl:'wrist'},1],['Leather Gloves',{kind:'a',at:'leather',sl:'hands'},2],['Leather Leggings',{kind:'a',at:'leather',sl:'legs'},2],['Leather Boots',{kind:'a',at:'leather',sl:'feet'},2]]},
+ loom:{n:'The Loom',sk:'tailor',mat:'cloth',d:'Weave caster robes, fighting gis and handwraps.',r:[['Robe',{kind:'a',at:'cloth',sl:'chest',var:null},4],['Gi',{kind:'a',at:'cloth',sl:'chest',var:'gi'},4],['Hood',{kind:'a',at:'cloth',sl:'head'},2],['Sleeves',{kind:'a',at:'cloth',sl:'arms'},2],['Wristwraps',{kind:'a',at:'cloth',sl:'wrist'},1],['Cloth Gloves',{kind:'a',at:'cloth',sl:'hands'},2],['Trousers',{kind:'a',at:'cloth',sl:'legs'},2],['Sandals',{kind:'a',at:'cloth',sl:'feet'},2],['Handwraps',{kind:'w',wt:'martial',var:'wraps'},2]]},
  fletcher:{n:'Woodworking Bench',sk:'fletch',mat:'wood',d:'Carve staves (bo staffs and wizard staffs) and shape bows.',r:[['Bo Staff',{kind:'w',wt:'martial',var:'bo'},3],['Wizard Staff',{kind:'w',wt:'blunt',var:'staff'},3],['Bow',{kind:'w',wt:'bow'},3]]},
  alchemy:{n:'Alchemy Table',sk:'alchemy',d:'Brew potions, and elixirs that last one floor.'},
  enchant:{n:'Enchanting Altar',sk:'enchant',d:'Bind arcane dust into your gear.'},
@@ -1764,10 +1963,10 @@ const overTier=(k,ti)=>Math.max(0,ti-tierCap(k)+1);
 const craftCost=(st,base)=>Math.max(1,Math.round(base*(has(STATIONS[st].sk+'_25')?.75:1)));
 let stTier={};
 function craftGear(st,i,ti){const S=STATIONS[st],[n,o,base]=S.r[i],k=matKey(S.mat,ti),cost=craftCost(st,base),lv=sk(S.sk),mw=has(S.sk+'_50');
-  if(matCount(k)<cost||H.bag.length>=BAG_MAX)return;
+  if(matCount(k)<cost||!bagFits({kind:o.kind,sl:o.sl||'chest',wt:o.wt,var:o.var,b:0,jt:o.jt}))return;
   const ov=overTier(S.sk,ti);H.mats[k]-=cost;const rr=Math.random(),rar=ov?0:rr<lv*.0025+(mw?.05:0)?2:rr<.08+lv*.006+(mw?.2:0)?1:0;
   const g=rollGear(0,0,Object.assign({},o,{ti,plus:Math.max(0,Math.floor(lv/25)+(mw?1:0)),rar}));
-  if(ov){const pen=ov*2;if(g.kind==='w'){g.d=[Math.max(1,g.d[0]-pen),Math.max(2,g.d[1]-pen)]}else g.a=Math.max(1,g.a-ov);g.base+=' (crude)';nameGear(g)}
+  if(ov){const pen=ov*2;if(g.kind==='w'){g.d=[Math.max(1,g.d[0]-pen),Math.max(2,g.d[1]-pen)]}else if(g.kind==='a')g.a=Math.max(.1,round1(g.a*(1-.2*ov)));else g.a=Math.max(1,g.a-ov);g.base+=' (crude)';nameGear(g)}
   train(S.sk,4+ti*2.5+ov*3);stash(g);SFX.coin();save();return g}
 // --- camp panels
 const matLine=(k,need)=>`<span class="${matCount(k)>=need?'good':'bad'}">${need} ${matLabel(k)} (${matCount(k)})</span>`;
@@ -1787,7 +1986,7 @@ function openStation(st,note){
     for(const E of ELIXIRS){const ok=lv>=15;h+=`<div class="line"><img src="${ICON.pot.u}"><span class="t" style="${ok?'':'opacity:.5'}">${E.n}<br><small>${ok?`${matLine('herb',3)} + ${matLine('dust',1)} · ${E.d}`:'Needs Alchemy 15'}</small></span>${ok?`<button data-cmd="brew" data-e="${E.k}" ${matCount('herb')<3||matCount('dust')<1?'disabled':''}>BREW</button>`:''}</div>`}}
   if(st==='enchant'){const dc=n=>Math.max(1,Math.round(n*(has('enchant_25')?.75:1)));
     h+=`<p class="dim" style="text-align:left">Imbue plain gear with a bonus (Enchanting 5), reroll a magic item's bonuses (15), or raise magic gear to rare (30). You have ${matCount('dust')} Arcane Dust.</p>`;
-    const items=[['weapon',H.weapon],['shield',H.shield],['armor',H.armor],...H.bag.map((g,i)=>['bag'+i,g])].filter(x=>x[1]&&!x[1].starter);
+    const items=[['weapon',H.weapon],['shield',H.shield],...EQSLOTS.map(k=>['eq_'+k,H.eq[k]]),...H.bag.map((g,i)=>['bag'+i,g])].filter(x=>x[1]&&!x[1].starter);
     if(!items.length)h+='<p class="dim">No gear to enchant. Starter gear cannot be enchanted.</p>';
     for(const [slot,g] of items){const ti=Math.max(0,TIERS.findIndex(x=>x.t===g.t));let act,cost,need;
       if(!g.rar){act='IMBUE';cost=dc(2+ti);need=5}else if(g.rar===1){act='RARE';cost=dc(6+ti*2);need=30}else{act='REROLL';cost=dc(3+ti);need=15}
@@ -1802,8 +2001,8 @@ function openStation(st,note){
 }
 function matsSummary(src){const m=src||H.mats||{},ks=Object.keys(m).filter(k=>m[k]>0).sort();if(!ks.length)return'<p class="dim" style="text-align:left">None yet. Monsters drop materials as you delve.</p>';
   return`<div style="display:flex;flex-wrap:wrap;gap:6px 12px;text-align:left;font-size:18px">${ks.map(k=>`<span style="display:flex;align-items:center;gap:4px"><img src="${matTex(k).u}" style="width:20px;height:20px">${m[k]} ${matLabel(k)}</span>`).join('')}</div>`}
-function doEnchant(slot,act){const g=slot.startsWith('bag')?H.bag[+slot.slice(3)]:H[slot];if(!g)return;const ti=Math.max(0,TIERS.findIndex(x=>x.t===g.t)),dc=n=>Math.max(1,Math.round(n*(has('enchant_25')?.75:1)));
-  const lvl=ti*1+Math.floor(sk('enchant')/25)+(has('enchant_50')?2:0)+TIERS[ti].t,pre=AFFIX.pre.filter(a=>a.on.includes(g.kind)),suf=AFFIX.suf.filter(a=>a.on.includes(g.kind)),mk=a=>({k:a.k,v:a.v(Math.round(lvl/2+TIERS[ti].t/2))});
+function doEnchant(slot,act){const g=slot.startsWith('bag')?H.bag[+slot.slice(3)]:slot.startsWith('eq_')?H.eq[slot.slice(3)]:slotItem(slot);if(!g)return;const ti=Math.max(0,TIERS.findIndex(x=>x.t===g.t)),dc=n=>Math.max(1,Math.round(n*(has('enchant_25')?.75:1)));
+  const lvl=ti*1+Math.floor(sk('enchant')/25)+(has('enchant_50')?2:0)+TIERS[ti].t,pre=AFFIX.pre.filter(a=>a.on.includes(g.kind)),suf=AFFIX.suf.filter(a=>a.on.includes(g.kind)),mk=a=>({k:a.k,v:Math.max(1,Math.round(a.v(Math.round(lvl/2+TIERS[ti].t/2))*affMul(g)))});
   let cost;if(act==='imbue'){cost=dc(2+ti);if(matCount('dust')<cost)return;g.rar=1;g.aff=[mk(pick(Math.random()<.5?pre:suf))]}
   else if(act==='reroll'){cost=dc(3+ti);if(matCount('dust')<cost)return;g.aff=g.rar===2?[mk(pick(pre)),mk(pick(suf))]:[mk(pick(Math.random()<.5?pre:suf))]}
   else if(act==='rare'){cost=dc(6+ti*2);if(matCount('dust')<cost)return;const hasPre=g.aff.some(a=>AFFIX.pre.find(x=>x.k===a.k));g.aff.push(mk(pick(hasPre?suf:pre)));g.rar=2}
@@ -1822,7 +2021,7 @@ document.addEventListener('click',e=>{
   if(performance.now()-ovT<350)return;
   audio();const c=b.dataset.cmd;
   if(c==='play'){curSlot=+b.dataset.s;const s=load();if(!s)return;H=ensureSkills(fixNames(migrateHero(s.H)));campFloor=H.waypoint;if(H.migrated){const r=H.migrated;delete H.migrated;save();if(!s.G){enterCamp(`${H.name} returns. The camp has new trainers: skills now grow as you use them, and you have ${H.pp} perk points to spend. Your Might and Toughness training was refunded (${r} gold).`,true);return}}if(s.G){hideAll();resume(s.G)}else enterCamp(`Welcome back, ${H.name}.`,false);return}
-  if(c==='newslot'){curSlot=+b.dataset.s;H=newHero();campFloor=1;enterCamp(`${H.name} arrives at camp, eager to delve.`,true);return}
+  if(c==='newslot'){curSlot=+b.dataset.s;H=ensureSkills(newHero());campFloor=1;enterCamp(`${H.name} arrives at camp, eager to delve.`,true);return}
   if(c==='del'){const i=+b.dataset.s;if(delArm.s===i&&performance.now()-delArm.t<4000){try{localStorage.removeItem(slotKey(i))}catch(err){}delArm={s:-1,t:0}}else delArm={s:i,t:performance.now()};renderSlots();return}
   if(c==='title'){save();G=null;H=null;showTitle();return}
   if(c==='go'){hideAll();startRun(campFloor);return}
@@ -1846,6 +2045,11 @@ document.addEventListener('click',e=>{
   if(c==='up'){const k=b.dataset.k,cost=upCost(k);if(H.bank>=cost&&H.up[k]<UPMAX){H.bank-=cost;H.up[k]++;SFX.level()}save();hud();campNote(`You train hard. ${UPS[k].n} is now ${H.up[k]}.`);return}
   if(c==='buypot'){if(H.bank>=POTION_COST&&H.potions<POTION_MAX){H.bank-=POTION_COST;H.potions++;SFX.coin()}save();hud();campNote('Oswin hands you a potion.');return}
   if(c==='sell'){const vi=+b.dataset.v,m=+b.dataset.m||1;if(vi>=0)commitVisitor(vi);const g=H.bag.splice(+b.dataset.i,1)[0],v=Math.round(sellVal(g)*m);H.bank+=v;SFX.coin();save();hud();campNote(`You sell the ${g.n} for ${v} gold.`);return}
+  if(c==='isel'){if(performance.now()-iDragEnd<120)return;const nx=b.dataset.slot?{from:'slot',slot:b.dataset.slot}:{from:'bag',i:+b.dataset.i};
+    invSel=invSel&&invSel.from===nx.from&&invSel.slot===nx.slot&&invSel.i===nx.i?null:nx;openBag();return}
+  if(c==='iequip'){if(invSel&&invSel.from==='bag')invEquipBag(invSel.i);return}
+  if(c==='iunequip'){if(invSel&&invSel.from==='slot')invUnequip(invSel.slot);return}
+  if(c==='idrop'){if(invSel&&invSel.from==='bag'&&G&&!G.camp){const g=H.bag.splice(invSel.i,1)[0];delete g.gx;G.items.push({k:'gear',g,x:G.P.x,y:G.P.y,ox:0,oy:0,h:0});log(`You drop the ${g.n}.`);invSel=null;afterInv()}return}
   if(c==='equip'){const g=H.bag.splice(+b.dataset.i,1)[0];const ok=equip(g,true);save();
     if(ok)log(`You equip the ${g.n}.`);hud();if($('npcov').classList.contains('show')&&panelFn)panelFn();else openBag();return}
   if(c==='char'){openChar();return}
@@ -1855,7 +2059,7 @@ document.addEventListener('click',e=>{
   if(c==='train'){const k=b.dataset.k,cost=trainCost(k);if(H.bank>=cost&&sk(k)<TRAIN_CAP){H.bank-=cost;H.sk[k].lv++;H.sk[k].xp=0;SFX.coin()}save();campNote(`Hald drills you. ${SKILLS[k]} is now ${sk(k)}.`);return}
   if(c==='fl'){campFloor=clamp(campFloor+(+b.dataset.d),1,H.waypoint);openGate();return}
   if(c==='store'){H.stash=H.stash||[];const g=H.bag.splice(+b.dataset.i,1)[0];H.stash.push(g);save();openStash(`You store the ${g.n}.`);return}
-  if(c==='take'){const g=H.stash.splice(+b.dataset.i,1)[0];H.bag.push(g);save();openStash(`You take the ${g.n}.`);return}
+  if(c==='take'){const g=H.stash[+b.dataset.i];if(!bagFits(g)){openStash(`No room in your pack for the ${g.n}.`);return}H.stash.splice(+b.dataset.i,1);bagAdd(g);save();openStash(`You take the ${g.n}.`);return}
   if(c==='vbuy'){buyFromVisitor(+b.dataset.v,+b.dataset.i);return}
   if(c==='vev'){resolveEvent(+b.dataset.v,b.dataset.o);return}
   if(c==='sttier'){const st=b.dataset.s;stTier[st]=(stTier[st]||0)+(+b.dataset.d);openStation(st);return}
@@ -1938,6 +2142,7 @@ document.addEventListener('keydown',e=>{
     if(open.length){open.forEach(o=>o.classList.remove('show'));return}
     openMenu('main');return}
   const k=e.key.toLowerCase();if(MOVEKEYS.includes(k)||k===' '){KEYS.add(k);if(playing())e.preventDefault();if(k!==' '||e.repeat)return}
+  if(k==='i'&&!e.repeat&&$('bagov').classList.contains('show')){$('bagov').classList.remove('show');return}
   if(k==='m'&&!e.repeat&&$('mapov').classList.contains('show')){$('mapov').classList.remove('show');return}
   if(k==='tab'){e.preventDefault();if(!e.repeat&&playing()){SET.mini=SET.mini?0:1;saveSet();applyVideo()}return}
   if(k==='p'&&!e.repeat&&(playing()||$('menuov').classList.contains('show'))){if($('menuov').classList.contains('show'))$('menuov').classList.remove('show');else openMenu('main');return}
@@ -2142,7 +2347,7 @@ function openMenu(tab){
       <b>W A S D</b><span>Move and strafe</span><b>MOUSE</b><span>Look around (the cursor only appears in menus)</span><b>ARROWS</b><span>Move and turn</span>
       <b>LEFT CLICK / SPACE</b><span>Attack (hold to keep swinging)</span><b>RIGHT CLICK / R</b><span>Cast readied spell</span><b>1-9 / WHEEL</b><span>Hotbar: 1 drinks a potion, 2+ ready a spell (press again to cast)</span><b>E</b><span>Use: open doors, talk, craft, take stairs (also F, ENTER)</span>
       <b>R</b><span>Cast readied spell</span><b>X</b><span>Sneak</span><b>C</b><span>Pick up</span><b>H</b><span>Drink potion</span>
-      <b>I</b><span>Pack</span><b>K</b><span>Character sheet</span><b>M</b><span>Map (press again to close)</span><b>TAB</b><span>Corner minimap on/off</span><b>L</b><span>Log</span><b>ESC / P</b><span>This menu</span></div>
+      <b>I</b><span>Inventory (press again to close)</span><b>K</b><span>Character sheet</span><b>M</b><span>Map (press again to close)</span><b>TAB</b><span>Corner minimap on/off</span><b>L</b><span>Log</span><b>ESC / P</b><span>This menu</span></div>
       <p class="dim" style="font-size:18px;text-align:left">Touch: the stick moves you; drag the view to look around; tap the view or press ATTACK to strike; the USE button opens doors, talks and takes stairs.</p>`;
   }
   else if(tab==='saves')h=savesHTML();
