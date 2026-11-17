@@ -38,7 +38,7 @@ The script is split by `// ===== SECTION =====` headers. Search for the header t
 | DATA | `MONS` monster table (hp, dmg, floor range, guardian names) |
 | ITEMS | `TIERS`, `WTYPES`, `WVAR`, `ATYPES`, `SHIELDS`, `AFFIX`, `rollGear`, `wprop`, `gearDesc` |
 | GEAR SLOTS | `SLOTDEF` (armor pieces: share of a full suit `sh`, affix strength `am`), `EQSLOTS`, `APIECE` names, jewelry `JMAT`, `armShare(type)` (mixed armor by weight), `setupEq` (slots, save migration, `H.armor` = chest accessor) |
-| INVENTORY | `openBag`: paperdoll (`DOLLSLOTS`) + `drawAvatar`, `invStats`, backpack grid (`BAGW`x`BAGH`, `isz`, `bagGrid`, `fitsAt`, `findSpot`, `bagAdd`, `stash`), drag and drop (`IDR`), `invEquipBag`, `invUnequip` |
+| INVENTORY | `openBag` (tabs via `invTab`: inventory, skills = `skillsHTML`): paperdoll (`DOLLSLOTS`) + `drawAvatar`, `invStats`, backpack grid (`BAGW`x`BAGH`, `isz`, `bagGrid`, `fitsAt`, `findSpot`, `bagAdd`, `stash`), drag and drop (`IDR`), `invEquipBag`, `invUnequip` |
 | SKILLS & PERKS | `SKILLS` (19 combat), `CRAFT_SK` (7 crafting), `PERKS`, `train`, `skNeed` |
 | SPELLS | `SPELLS` (Holy, Nature, Arcane; 3 each), `cast` |
 | BALANCE | `BAL`: every difficulty knob in one object |

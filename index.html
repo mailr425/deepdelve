@@ -105,6 +105,12 @@ body.landscape .invgrid{flex-wrap:nowrap}
 .ipack .icard{width:auto;margin-top:8px}
 .invbtns{display:flex;gap:8px;justify-content:center;margin-top:10px}.invbtns button{min-width:180px}
 .imats{font-size:16px;margin-top:6px}
+.itabs{display:flex;gap:6px;justify-content:center;margin:0 0 12px}.itabs button{min-width:200px;padding:10px 8px}
+.itabs button.cur{background:#5a4228;box-shadow:inset 2px 2px 0 #a8865a,inset -2px -2px 0 #2a1e14;color:#ffd36a}
+.iskills{text-align:left;max-width:1100px}
+.skcols{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:4px 18px;align-items:start}
+.skgrp h3{margin:8px 0 2px}
+body.landscape .skcols{grid-template-columns:repeat(5,minmax(210px,1fr))}body.landscape .iskills{max-width:none}
 .invtop{display:contents}
 .doll{display:grid;grid-template-columns:52px 136px 52px;grid-auto-rows:52px;gap:4px;
  grid-template-areas:"head av neck" "chest av ring1" "arms av ring2" "lwrist av rwrist" "hands av legs" "weapon feet shield"}
@@ -1564,7 +1570,7 @@ function bagLines(sell,mult=1,vi=-1){let h='';
 // Paperdoll (13 slots around the hero's avatar), stats with numbers and percentages, and a Diablo-style
 // backpack where items have sizes. Click an item for details; drag it to move, drop it on a slot to equip,
 // drag a worn item into the pack to take it off. Right-click / double-click quick-equips or unequips.
-let invSel=null;
+let invSel=null,invTab='inv';
 const DOLLSLOTS=['head','neck','chest','ring1','arms','ring2','lwrist','rwrist','hands','legs','weapon','feet','shield'];
 const pctS=v=>Math.round(v*100)+'%';
 function invStats(){const P=G?G.P:null,W=wprop(H.weapon),wt=H.weapon.wt,ranged=!!W.range,b=dmgBonus()+(!ranged&&has('melee_25')?1:0);
@@ -1587,8 +1593,11 @@ function invCard(){const sel=invSel,g=sel?(sel.from==='bag'?H.bag[sel.i]:slotIte
   else if(sel.slot!=='weapon'&&!g.starter)h+=`<button data-cmd="iunequip">TAKE OFF</button>`;
   return h+'</div></div>'}
 function openBag(){
+  if(invTab==='skills'){const box=$('bagbox');box.classList.add('inv');
+    box.innerHTML=`<div class="inv">${invTabs()}<div class="iskills">${skillsHTML()}</div><div class="invbtns"><button class="gold" data-cmd="close">CLOSE</button></div></div>`;
+    if(!$('bagov').classList.contains('show'))show('bagov');fitInv();return}
   const c=Math.max(26,Math.min(38,Math.floor((innerWidth/uiScale()-60)/10)));
-  let h=`<div class="inv" style="--c:${c}px"><h2 style="margin:0 0 10px">${H.name.toUpperCase()} · LEVEL ${H.lvl}</h2><div class="invgrid"><div class="doll"><canvas id="avatar" width="34" height="60"></canvas>`;
+  let h=`<div class="inv" style="--c:${c}px">${invTabs()}<div class="invgrid"><div class="doll"><canvas id="avatar" width="34" height="60"></canvas>`;
   for(const k of DOLLSLOTS){const g=slotItem(k),sel=invSel&&invSel.from==='slot'&&invSel.slot===k;
     h+=`<button class="slot r${g?g.rar||0:0}${sel?' sel':''}" style="grid-area:${k}" data-cmd="isel" data-slot="${k}">${g&&!g.none?`<img src="${gearIcon(g)}">`:`<span class="lb">${EQNAME[k].replace(' ','<br>')}</span>`}</button>`}
   h+=`</div><div class="istats"><h3 style="margin-top:0">STATS</h3>${invStats().map(([k,v])=>`<div class="srow"><span>${k}</span><b>${v}</b></div>`).join('')}</div>`;
@@ -1597,9 +1606,10 @@ function openBag(){
     h+=`<button class="it r${g.rar||0}${sel?' sel':''}${isUpgrade(g)?' up':''}" data-cmd="isel" data-i="${i}" style="left:${g.gx*c}px;top:${g.gy*c}px;width:${w*c}px;height:${hh*c}px"><img src="${gearIcon(g)}"></button>`});
   h+=`</div><div id="icardw">${invCard()}</div>`;
   h+=`<div class="imats"><h3 style="margin:8px 0 2px">${G&&!G.camp?'MATERIALS CARRIED':'MATERIALS'}</h3>${G&&!G.camp?matsSummary(G.P.mats||{}):matsSummary()}</div></div></div>`;
-  h+=`<div class="invbtns"><button data-cmd="char">SKILLS &amp; PERKS</button><button class="gold" data-cmd="close">CLOSE</button></div></div>`;
+  h+=`<div class="invbtns"><button class="gold" data-cmd="close">CLOSE</button></div></div>`;
   const box=$('bagbox');box.classList.add('inv');box.innerHTML=h;if(!$('bagov').classList.contains('show'))show('bagov');
   drawAvatar($('avatar'));fitInv()}
+const invTabs=()=>`<h2 style="margin:0 0 8px">${H.name.toUpperCase()} · LEVEL ${H.lvl}</h2><div class="itabs"><button data-cmd="itab" data-t="inv" class="${invTab==='inv'?'cur':''}">INVENTORY</button><button data-cmd="itab" data-t="skills" class="${invTab==='skills'?'cur':''}">SKILLS &amp; PERKS${H.pp?` <span class="good">(${H.pp})</span>`:''}</button></div>`;
 // Size the inventory to fit the screen without scrolling (shrinks below the UI scale if needed).
 function fitInv(){const box=$('bagbox');if(!box.classList.contains('inv'))return;const ui=uiScale();
   document.body.classList.toggle('landscape',innerWidth>innerHeight*1.05);
@@ -1685,21 +1695,23 @@ function openCast(){
   $('castbox').innerHTML=h;if(!$('castov').classList.contains('show'))show('castov');
 }
 let charOpen={};
-function openChar(){
+// Skills & perks live in a tab of the inventory window (openChar switches to it).
+function openChar(){invTab='skills';openBag()}
+function skillsHTML(){
   const inRun=!!G;
-  let h=`<h2>${H.name.toUpperCase()}</h2><p class="dim">Level ${H.lvl} · XP ${H.xp}/${xpNext(H.lvl)}</p>
+  let h=`<p class="dim" style="margin:0 0 6px">Level ${H.lvl} · XP ${H.xp}/${xpNext(H.lvl)}</p>
    <div class="line"><span class="t">HP ${inRun?G.P.hp+'/':''}${maxHP()} · Mana ${inRun?G.P.mp+'/':''}${maxMP()}<br><small>Armor ${armorVal()} · Dodge ${Math.round(dodgeCh()*100)}% · Block ${Math.round(blockCh()*100)}% · Stealth ${Math.max(0,Math.round(stealthVal()))}</small></span></div>
    <div class="line"><span class="t">Perk points: <span class="coin">${H.pp}</span><br><small>Earn 1 per level. Skills improve as you use them, and each one unlocks perks at 25, 50, 75 and 100.</small></span></div>`;
-  for(const [g,list] of SKGROUPS){h+=`<h3>${g}</h3>`;
+  h+='<div class="skcols">';
+  for(const [g,list] of SKGROUPS){h+=`<div class="skgrp"><h3>${g}</h3>`;
     for(const k of list){const s=H.sk[k],pct=Math.round(100*s.xp/skNeed(s.lv)),open=charOpen[k];
       h+=`<div class="skl" data-cmd="skopen" data-k="${k}"><div class="skh"><span>${SKILLS[k]}</span><span class="coin">${s.lv}</span></div><div class="sbar"><i style="width:${s.lv>=100?100:pct}%"></i></div></div>`;
       const avail=[0,1,2,3].filter(i=>!has(perkId(k,i))&&s.lv>=[25,50,75,100][i]).length;
       if(avail&&!open)h+=`<div class="prk good" data-cmd="skopen" data-k="${k}">Perk available, tap to view</div>`;
       if(open)for(let i=0;i<4;i++){const id=perkId(k,i),P2=perkInfo(k,i),req=[25,50,75,100][i],own=has(id),can=s.lv>=req;
-        h+=`<div class="line prkl"><span class="t" style="${own||can?'':'opacity:.45'}">${req} · ${own?'<span class="good">'+P2.n+'</span>':P2.n}<br><small>${P2.d}</small></span>${own?'<span class="good">OWNED</span>':can?`<button data-cmd="perk" data-p="${id}" ${H.pp<1?'disabled':''}>LEARN</button>`:''}</div>`}}}
-  h+=`<button class="wide gold" data-cmd="close">CLOSE</button>`;
-  $('charbox').innerHTML=h;if(!$('charov').classList.contains('show'))show('charov');
-}
+        h+=`<div class="line prkl"><span class="t" style="${own||can?'':'opacity:.45'}">${req} · ${own?'<span class="good">'+P2.n+'</span>':P2.n}<br><small>${P2.d}</small></span>${own?'<span class="good">OWNED</span>':can?`<button data-cmd="perk" data-p="${id}" ${H.pp<1?'disabled':''}>LEARN</button>`:''}</div>`}}h+='</div>'}
+  h+='</div>';return h}
+
 const trainCost=k=>Math.round(15*Math.pow(1.11,sk(k)));
 let showTrainer=false;
 const TEX_URL={shield:texURL(TEX.shield),gold:texURL(TEX.gold)};
@@ -2058,6 +2070,7 @@ document.addEventListener('click',e=>{
   if(c==='up'){const k=b.dataset.k,cost=upCost(k);if(H.bank>=cost&&H.up[k]<UPMAX){H.bank-=cost;H.up[k]++;SFX.level()}save();hud();campNote(`You train hard. ${UPS[k].n} is now ${H.up[k]}.`);return}
   if(c==='buypot'){if(H.bank>=POTION_COST&&H.potions<POTION_MAX){H.bank-=POTION_COST;H.potions++;SFX.coin()}save();hud();campNote('Oswin hands you a potion.');return}
   if(c==='sell'){const vi=+b.dataset.v,m=+b.dataset.m||1;if(vi>=0)commitVisitor(vi);const g=H.bag.splice(+b.dataset.i,1)[0],v=Math.round(sellVal(g)*m);H.bank+=v;SFX.coin();save();hud();campNote(`You sell the ${g.n} for ${v} gold.`);return}
+  if(c==='itab'){invTab=b.dataset.t;openBag();return}
   if(c==='isel'){if(performance.now()-iDragEnd<120)return;const nx=b.dataset.slot?{from:'slot',slot:b.dataset.slot}:{from:'bag',i:+b.dataset.i};
     invSel=invSel&&invSel.from===nx.from&&invSel.slot===nx.slot&&invSel.i===nx.i?null:nx;openBag();return}
   if(c==='iequip'){if(invSel&&invSel.from==='bag')invEquipBag(invSel.i);return}
@@ -2096,7 +2109,7 @@ function resume(g){if(g.camp){G=null;return enterCamp(`Welcome back, ${H.name}.`
 const overlayOpen=()=>document.querySelector('.ov.show');
 const playing=()=>G&&!G.dead&&!overlayOpen();
 const ACT={fwd:()=>tryMove(0),back:()=>tryMove(2),sl:()=>tryMove(3),sr:()=>tryMove(1),tl:()=>turn(-1),tr:()=>turn(1),
-  atk:()=>rtAttack(),use:useAction,pot:quaff,bag:openBag,map:openMap,cast:()=>{const r=SPELLS.find(x=>x.id===H.ready);if(r&&sk(r.s)>=r.req)cast(r.id);else openCast()},pick:openCast,char:openChar,sneak:toggleSneak,log:openLog};
+  atk:()=>rtAttack(),use:useAction,pot:quaff,bag:()=>{invTab='inv';openBag()},map:openMap,cast:()=>{const r=SPELLS.find(x=>x.id===H.ready);if(r&&sk(r.s)>=r.req)cast(r.id);else openCast()},pick:openCast,char:openChar,sneak:toggleSneak,log:openLog};
 const REPEAT={fwd:210,back:210,sl:210,sr:210,tl:280,tr:280,atk:110};
 document.querySelectorAll('[data-a]').forEach(b=>{
   const a=b.dataset.a;let rt=null,rv=null;
@@ -2155,7 +2168,7 @@ document.addEventListener('keydown',e=>{
     if(open.length){open.forEach(o=>o.classList.remove('show'));return}
     openMenu('main');return}
   const k=e.key.toLowerCase();if(MOVEKEYS.includes(k)||k===' '){KEYS.add(k);if(playing())e.preventDefault();if(k!==' '||e.repeat)return}
-  if(k==='i'&&!e.repeat&&$('bagov').classList.contains('show')){$('bagov').classList.remove('show');return}
+  if((k==='i'||k==='k')&&!e.repeat&&$('bagov').classList.contains('show')){const want=k==='i'?'inv':'skills';if(invTab===want)$('bagov').classList.remove('show');else{invTab=want;openBag()}return}
   if(k==='m'&&!e.repeat&&$('mapov').classList.contains('show')){$('mapov').classList.remove('show');return}
   if(k==='tab'){e.preventDefault();if(!e.repeat&&playing()){SET.mini=SET.mini?0:1;saveSet();applyVideo()}return}
   if(k==='p'&&!e.repeat&&(playing()||$('menuov').classList.contains('show'))){if($('menuov').classList.contains('show'))$('menuov').classList.remove('show');else openMenu('main');return}
@@ -2360,7 +2373,7 @@ function openMenu(tab){
       <b>W A S D</b><span>Move and strafe</span><b>MOUSE</b><span>Look around (the cursor only appears in menus)</span><b>ARROWS</b><span>Move and turn</span>
       <b>LEFT CLICK / SPACE</b><span>Attack (hold to keep swinging)</span><b>RIGHT CLICK / R</b><span>Cast readied spell</span><b>1-9 / WHEEL</b><span>Hotbar: 1 drinks a potion, 2+ ready a spell (press again to cast)</span><b>E</b><span>Use: open doors, talk, craft, take stairs (also F, ENTER)</span>
       <b>R</b><span>Cast readied spell</span><b>X</b><span>Sneak</span><b>C</b><span>Pick up</span><b>H</b><span>Drink potion</span>
-      <b>I</b><span>Inventory (press again to close)</span><b>K</b><span>Character sheet</span><b>M</b><span>Map (press again to close)</span><b>TAB</b><span>Corner minimap on/off</span><b>L</b><span>Log</span><b>ESC / P</b><span>This menu</span></div>
+      <b>I</b><span>Inventory (press again to close)</span><b>K</b><span>Skills &amp; perks (press again to close)</span><b>M</b><span>Map (press again to close)</span><b>TAB</b><span>Corner minimap on/off</span><b>L</b><span>Log</span><b>ESC / P</b><span>This menu</span></div>
       <p class="dim" style="font-size:18px;text-align:left">Touch: the stick moves you; drag the view to look around; tap the view or press ATTACK to strike; the USE button opens doors, talks and takes stairs.</p>`;
   }
   else if(tab==='saves')h=savesHTML();
