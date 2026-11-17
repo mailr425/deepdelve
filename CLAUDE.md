@@ -73,6 +73,8 @@ Facing codes are 0=N, 1=E, 2=S, 3=W, with `DX=[0,1,0,-1]` and `DY=[-1,0,1,0]`.
   spells fly along the crosshair ray (`lineMons`).
 - Hit feedback: `shake(amp,ms)` on taking damage, and hit-stop (`HS`, world frozen ~70-160 ms) on crits and kills.
 - Minimap: corner map in the modern HUD (`SET.mini`, TAB toggles). M opens and closes the full map.
+- Look info (`lookTarget`, `drawLookInfo`): a name card (station + craft skill, merchant name + wares, door, stairs,
+  gate) above the [E] prompt, and the name + health bar of the foe under the crosshair at the top of the view.
 - Player attacks use per-weapon cooldowns (`weaponCD`, about one tick). Nothing happens on collision: doors, NPCs,
   stations, the gate and stairs are used with USE (E key, B on a controller, the USE button, or tapping the
   view). A prompt like `[E] OPEN` shows in the view when something is usable (`useMode`).

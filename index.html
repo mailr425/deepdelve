@@ -1281,10 +1281,7 @@ function render(now){
     const y=Math.round(VH*.4-k*40+f.oy),x=Math.round(VW/2+f.ox);
     ctx.fillStyle='#000';ctx.fillText(f.txt,x+3,y+3);ctx.fillStyle=f.c;ctx.fillText(f.txt,x,y);ctx.globalAlpha=1}
   if(drawWeapon(now))anim=true;
-  if(!G.dead){const um=useMode();if(um[2]!=='wait'){const key=padLoopOn?'B':matchMedia('(pointer:coarse)').matches?'':'E';
-    const txt=(key?`[${key}] `:'')+um[1]+(um[2]==='npc'&&G.camp?'':'');ctx.font='20px Delve,monospace';ctx.textAlign='center';
-    const tw=ctx.measureText(txt).width,yy=Math.round(VH*.70);ctx.fillStyle='rgba(0,0,0,.6)';ctx.fillRect(Math.round(VW/2-tw/2-8),yy-18,Math.round(tw+16),26);
-    ctx.fillStyle=um[2]==='sealed'?'#e0584a':'#ffd36a';ctx.fillText(txt,VW/2,yy)}}
+  if(!G.dead)drawLookInfo(now);
   if(P.sneak){ctx.fillStyle='rgba(4,8,30,.28)';ctx.fillRect(0,0,VW,VH)}
   if(FX.flash){const k=(now-FX.flash.t)/280;if(k<1&&SET.flash){ctx.globalAlpha=.3*(1-k);ctx.fillStyle=FX.flash.c;ctx.fillRect(0,0,VW,VH);ctx.globalAlpha=1;anim=true}else FX.flash=null}
   if(FX.bolt)anim=true;
@@ -2057,6 +2054,43 @@ function monUpdate(dt,now){
 // Hit feedback: a short screen shake, and hit-stop (the world freezes for a few frames) on crits and kills.
 let HS=0;
 function shake(a,ms){FX.shake={t:performance.now(),a,ms}}
+// What you're looking at: a name card above the [E] prompt for usable things (station, merchant, door,
+// stairs, gate), and a Skyrim-style name + health bar at the top for the foe under the crosshair.
+function lookTarget(){const P=G.P,um=useMode();if(um[2]==='wait')return null;
+  const fx=P.x+DX[P.dir],fy=P.y+DY[P.dir];let name='',sub='';
+  if(um[2]==='npc'){const n=npcAt(fx,fy);if(n){const st=STATIONS[n.k];
+    if(st){name=st.n;sub=st.sk?`${SKILLS[st.sk]||''} ${sk(st.sk)}`.trim():''}
+    else{name=npcTitle(n);if(n.k==='visitor'){const v=H.camp.vis[n.vi];sub=v.kind==='merchant'?MERCH[v.type].d:(EVENTS[v.type].d||'')}
+      else sub={trainer:'Training and conditioning',quartermaster:'Potions; buys your spare gear',stash:'Safe storage, even if you die',bedroll:'Rest, hero record, change hero',fire:'Warm your hands'}[n.k]||''}}}
+  else if(um[2]==='gate'){name='The Dungeon Gate';sub=`Descend to floor ${campFloor}`}
+  else if(um[2]==='open'){name='Wooden Door'}
+  else if(um[2]==='close'){name='Open Door'}
+  else if(um[2]==='down'){name='Stairs';sub='The guardian is dead. The way back to camp is open.'}
+  else if(um[2]==='sealed'){name='Sealed Stairs';sub='Slay the floor guardian to break the seal'}
+  if(sub.length>52)sub=sub.slice(0,50).replace(/\s+\S*$/,'')+'…';
+  return{name,sub,act:um[1],mode:um[2]}}
+function drawLookInfo(now){
+  const u=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--u'))||1,t=lookTarget();
+  ctx.textAlign='center';
+  if(t){const key=padLoopOn?'B':matchMedia('(pointer:coarse)').matches?'':'E',yy=Math.round(VH*.66);
+    const act=(key?`[${key}] `:'')+t.act,f1=Math.round(20*u),f2=Math.round(18*u);
+    ctx.font=`${f1}px Delve,monospace`;const w1=t.name?ctx.measureText(t.name).width:0;
+    ctx.font=`${f2}px Delve,monospace`;const w2=t.sub?ctx.measureText(t.sub).width:0;
+    ctx.font=`${f1}px Delve,monospace`;const w3=ctx.measureText(act).width,w=Math.max(w1,w2,w3)+24*u;
+    const lines=(t.name?1:0)+(t.sub?1:0)+1,lh=f1*1.25,h=lines*lh+10*u;
+    ctx.fillStyle='rgba(8,6,4,.72)';ctx.fillRect(Math.round(VW/2-w/2),Math.round(yy-h),Math.round(w),Math.round(h));
+    ctx.fillStyle='rgba(168,134,90,.9)';ctx.fillRect(Math.round(VW/2-w/2),Math.round(yy-h),Math.round(w),Math.max(1,Math.round(2*u)));
+    let y=yy-h+lh;
+    if(t.name){ctx.font=`${f1}px Delve,monospace`;ctx.fillStyle='#f0e4c8';ctx.fillText(t.name,VW/2,y);y+=lh}
+    if(t.sub){ctx.font=`${f2}px Delve,monospace`;ctx.fillStyle='#b8a888';ctx.fillText(t.sub,VW/2,y);y+=lh}
+    ctx.font=`${f1}px Delve,monospace`;ctx.fillStyle=t.mode==='sealed'?'#e0584a':'#ffd36a';ctx.fillText(act,VW/2,y)}
+  if(G.camp||!document.body.classList.contains('imm'))return;
+  const W=wprop(H.weapon),m=(W.range?lineMons(W.range+2)[0]:null)?.m||meleeTarget(2.5)||(lineMons(8)[0]||{}).m;
+  if(!m||m.boss&&$('bossbar').style.display==='block')return;
+  const M=MONS[m.t],nm=(m.boss?M.boss:M.n.replace(/^./,c=>c.toUpperCase()))+(m.sleep?' (asleep)':!m.awake?' (unaware)':''),bw=Math.round(160*u),bh=Math.max(4,Math.round(7*u)),by=Math.round(52*u);
+  ctx.font=`${Math.round(18*u)}px Delve,monospace`;ctx.fillStyle='#000';ctx.fillText(nm,VW/2+2,by-4*u+2);ctx.fillStyle=m.awake?'#ffb0a0':'#d8d0c0';ctx.fillText(nm,VW/2,by-4*u);
+  ctx.fillStyle='#000';ctx.fillRect(Math.round(VW/2-bw/2)-2,by-2,bw+4,bh+4);ctx.fillStyle='#3a1008';ctx.fillRect(Math.round(VW/2-bw/2),by,bw,bh);
+  ctx.fillStyle='#c8382a';ctx.fillRect(Math.round(VW/2-bw/2),by,Math.round(bw*Math.max(0,m.hp)/m.maxhp),bh)}
 // Weapon held in view: bobs while walking, swings (or recoils, for ranged) on attack.
 const WPC=new Map();
 function weaponCanvas(t){let c=WPC.get(t);if(!c){c=document.createElement('canvas');c.width=t.w;c.height=t.h;const g=c.getContext('2d'),im=g.createImageData(t.w,t.h);
