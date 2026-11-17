@@ -233,6 +233,7 @@ body.imm #lockhint.on{display:block;position:absolute;left:50%;top:58%;transform
 <div class="ov show" id="titleov"><div class="box panel">
   <h1>DEEPDELVE</h1>
   <p class="dim">A dungeon that remembers you.</p>
+  <p class="dim" id="ver" style="font-size:10px"></p>
   <p class="dim" id="offline" style="font-size:10px"></p>
   <h3>CHOOSE YOUR HERO</h3><div id="slots"></div>
   <button class="wide" data-cmd="menu">OPTIONS</button><button class="wide" data-cmd="exitgame">QUIT GAME</button>
@@ -250,6 +251,7 @@ body.imm #lockhint.on{display:block;position:absolute;left:50%;top:58%;transform
 <div class="ov" id="mapov"><div class="box panel"><h2>MAP</h2><canvas id="bigmap"></canvas><p class="dim">Tap to close</p></div></div>
 
 <script>
+const VERSION='0.28'; // bump with each CHANGELOG.md entry
 "use strict";
 const $=id=>document.getElementById(id);
 const MW=33,MH=33;
@@ -2539,6 +2541,7 @@ document.addEventListener('pointerdown',()=>setPadFocus(null),true);
 startPad();
 
 // ================= BOOT =================
+{const v=document.getElementById('ver');if(v)v.textContent='v'+VERSION}
 (function boot(){
   applyVideo();
   renderSlots();
