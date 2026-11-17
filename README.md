@@ -47,13 +47,14 @@ Claude Code reads `CLAUDE.md` automatically. It covers how the game is organized
 editing it, the balance simulator and the backlog. Then just ask for things, for example:
 "make goblins steal gold" or "add a fourth spell school". Double-click `play.bat` to try each change.
 
-Optional: from the handoff doc on claude.ai, Export → Markdown, then save it here as `HANDOFF.md`.
-It holds the full build history and design notes.
+`CHANGELOG.md` is the build history from v1 on, with the reasons behind each change and lessons learned.
+The handoff doc on claude.ai has the full design spec (export it as `HANDOFF.md` if you want it here).
 
 ## Folder
 
 | Path | What |
 | --- | --- |
+| `CHANGELOG.md` | Every build, why it changed, and lessons learned |
 | `index.html` | The game |
 | `sw.js` | Offline support (keep next to `index.html`) |
 | `manifest.webmanifest`, `icon-*.png` | Lets phones and PCs install it as an app |

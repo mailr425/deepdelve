@@ -26,7 +26,8 @@ built as a family learn-gamedev-with-AI project. The whole game is one file, `in
   pack have `gx/gy`; add them with `bagAdd`/`stash` (never `H.bag.push`), check room with `bagFits`.
 - Saves live in localStorage (`deepdelve_slot_0..2`). Any new hero field needs a default in
   `migrateHero` / `ensureSkills` so old saves keep loading.
-- Commit after each working change, with a clear message.
+- Commit after each working change, with a clear message, and add an entry to `CHANGELOG.md` in the same
+  commit (what changed and why). Add anything that went wrong or surprised us to its Lessons learned section.
 
 ## Map of index.html
 
@@ -128,5 +129,5 @@ It needs `pip install playwright` and then `playwright install chromium`.
 
 ## Full history
 
-The handoff doc on claude.ai has the full build log (v1-v16), the design spec with every number,
+`CHANGELOG.md` has every build from v1 on, with the reasons and lessons learned. The handoff doc on claude.ai has the full build log (v1-v16), the design spec with every number,
 and the reasoning behind the design decisions. If `HANDOFF.md` exists in this folder, read it for context.
