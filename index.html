@@ -98,8 +98,14 @@ body.wide #side{width:380px;display:flex;flex-direction:column;justify-content:f
 .keys{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;text-align:left;font-size:20px;line-height:1em}
 .keys b{font-family:var(--px);font-size:10px;color:var(--gold);font-weight:normal;padding-top:4px}
 /* ===== Inventory (Diablo-style): paperdoll + avatar, stats, sized-item backpack grid ===== */
-#bagbox.inv{max-width:min(96vw,calc(940px / var(--ui,1)));padding:12px}
-.invtop{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;align-items:flex-start}
+#bagbox.inv{max-width:none;width:auto;padding:12px 16px}
+.invgrid{display:flex;gap:16px;justify-content:center;align-items:flex-start;flex-wrap:wrap}
+body.landscape .invgrid{flex-wrap:nowrap}
+.ipack{width:calc(var(--c)*10 + 4px);text-align:left}
+.ipack .icard{width:auto;margin-top:8px}
+.invbtns{display:flex;gap:8px;justify-content:center;margin-top:10px}.invbtns button{min-width:180px}
+.imats{font-size:16px;margin-top:6px}
+.invtop{display:contents}
 .doll{display:grid;grid-template-columns:52px 136px 52px;grid-auto-rows:52px;gap:4px;
  grid-template-areas:"head av neck" "chest av ring1" "arms av ring2" "lwrist av rwrist" "hands av legs" "weapon feet shield"}
 .slot{position:relative;width:52px;height:52px;padding:0;min-height:0;background:rgba(10,7,5,.75);border:2px solid #4a3a28;box-shadow:inset 0 0 0 2px rgba(0,0,0,.5);touch-action:none}
@@ -112,7 +118,7 @@ body.wide #side{width:380px;display:flex;flex-direction:column;justify-content:f
 .istats h3{margin:4px 0 6px}
 .srow{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid rgba(0,0,0,.35);padding:3px 0}
 .srow b{color:#f0e4c8;font-weight:normal;text-align:right}.srow span{color:#b8a888}
-.invmid{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;align-items:flex-start;margin-top:12px}
+.invmid{display:contents}
 .bag{position:relative;width:calc(var(--c)*10);height:calc(var(--c)*5);background-color:rgba(8,6,4,.8);border:2px solid #4a3a28;
  background-image:linear-gradient(rgba(90,70,50,.35) 1px,transparent 1px),linear-gradient(90deg,rgba(90,70,50,.35) 1px,transparent 1px);background-size:var(--c) var(--c);touch-action:none}
 .it{position:absolute;padding:0;min-height:0;background:rgba(30,22,16,.85);border:1px solid #000;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;touch-action:none}
@@ -594,7 +600,7 @@ function ensureSkills(h){h.sk=h.sk||{};for(const k in SKILLS)if(!h.sk[k])h.sk[k]
 // plain set of the same tier fills the other slots so the hero is not weaker. H.armor stays readable
 // (= the chest piece) for older code paths; it is not saved.
 function setupEq(h){
-  const fixA=g=>{if(g&&g.kind==='a'&&!g.sl){g.sl='chest';if(!g.starter&&g.t){const T=TIERS.find(x=>x.t===g.t)||TIERS[0];g.a=pieceA(T,g.at,'chest',g.plus);g.base=baseName(g);nameGear(g)}else g.a=.5}return g};
+  const fixA=g=>{if(g&&g.kind==='a'&&!g.sl){g.sl='chest';if(!g.starter&&g.t){const T=TIERS.find(x=>x.t===g.t)||TIERS[0];g.a=pieceA(T,g.at,'chest',g.plus);g.base=baseName(g);nameGear(g)}else g.a=1}return g};
   if(!h.eq){h.eq={};const a=h.armor;delete h.armor;
     if(a){fixA(a);h.eq.chest=a;
       if(!a.starter&&a.t){const ti=Math.max(0,TIERS.findIndex(x=>x.t===a.t));
@@ -1582,18 +1588,25 @@ function invCard(){const sel=invSel,g=sel?(sel.from==='bag'?H.bag[sel.i]:slotIte
   return h+'</div></div>'}
 function openBag(){
   const c=Math.max(26,Math.min(38,Math.floor((innerWidth/uiScale()-60)/10)));
-  let h=`<div class="inv" style="--c:${c}px"><h2>${H.name.toUpperCase()} · LEVEL ${H.lvl}</h2><div class="invtop"><div class="doll"><canvas id="avatar" width="34" height="60"></canvas>`;
+  let h=`<div class="inv" style="--c:${c}px"><h2 style="margin:0 0 10px">${H.name.toUpperCase()} · LEVEL ${H.lvl}</h2><div class="invgrid"><div class="doll"><canvas id="avatar" width="34" height="60"></canvas>`;
   for(const k of DOLLSLOTS){const g=slotItem(k),sel=invSel&&invSel.from==='slot'&&invSel.slot===k;
     h+=`<button class="slot r${g?g.rar||0:0}${sel?' sel':''}" style="grid-area:${k}" data-cmd="isel" data-slot="${k}">${g&&!g.none?`<img src="${gearIcon(g)}">`:`<span class="lb">${EQNAME[k].replace(' ','<br>')}</span>`}</button>`}
-  h+=`</div><div class="istats"><h3>STATS</h3>${invStats().map(([k,v])=>`<div class="srow"><span>${k}</span><b>${v}</b></div>`).join('')}</div></div>`;
-  h+=`<div class="invmid"><div><h3 style="margin:0 0 4px">PACK</h3><div class="bag" id="bag">`;
+  h+=`</div><div class="istats"><h3 style="margin-top:0">STATS</h3>${invStats().map(([k,v])=>`<div class="srow"><span>${k}</span><b>${v}</b></div>`).join('')}</div>`;
+  h+=`<div class="ipack"><h3 style="margin:0 0 4px">PACK</h3><div class="bag" id="bag">`;
   H.bag.forEach((g,i)=>{if(g.gx==null)return;const[w,hh]=isz(g),sel=invSel&&invSel.from==='bag'&&invSel.i===i;
     h+=`<button class="it r${g.rar||0}${sel?' sel':''}${isUpgrade(g)?' up':''}" data-cmd="isel" data-i="${i}" style="left:${g.gx*c}px;top:${g.gy*c}px;width:${w*c}px;height:${hh*c}px"><img src="${gearIcon(g)}"></button>`});
-  h+=`</div></div><div id="icardw">${invCard()}</div></div>`;
-  h+=G&&!G.camp?`<h3>MATERIALS CARRIED</h3>${matsSummary(G.P.mats||{})}<p class="dim" style="font-size:16px;text-align:left">Banked when you return to camp. Half are lost if you die.</p>`:`<h3>MATERIALS</h3>${matsSummary()}`;
-  h+=`<button class="wide" data-cmd="char">SKILLS &amp; PERKS</button><button class="wide gold" data-cmd="close">CLOSE</button></div>`;
+  h+=`</div><div id="icardw">${invCard()}</div>`;
+  h+=`<div class="imats"><h3 style="margin:8px 0 2px">${G&&!G.camp?'MATERIALS CARRIED':'MATERIALS'}</h3>${G&&!G.camp?matsSummary(G.P.mats||{}):matsSummary()}</div></div></div>`;
+  h+=`<div class="invbtns"><button data-cmd="char">SKILLS &amp; PERKS</button><button class="gold" data-cmd="close">CLOSE</button></div></div>`;
   const box=$('bagbox');box.classList.add('inv');box.innerHTML=h;if(!$('bagov').classList.contains('show'))show('bagov');
-  drawAvatar($('avatar'))}
+  drawAvatar($('avatar'));fitInv()}
+// Size the inventory to fit the screen without scrolling (shrinks below the UI scale if needed).
+function fitInv(){const box=$('bagbox');if(!box.classList.contains('inv'))return;const ui=uiScale();
+  document.body.classList.toggle('landscape',innerWidth>innerHeight*1.05);
+  box.style.zoom=1;box.style.maxHeight='none';box.style.overflow='visible';
+  const land=document.body.classList.contains('landscape'),w=box.scrollWidth,h=box.scrollHeight,z=Math.max(.5,Math.min(ui,(innerWidth-24)/w,land?(innerHeight-24)/h:9));
+  box.style.zoom=z;box.style.overflow='';box.style.maxHeight=Math.floor((innerHeight-24)/z)+'px'}
+window.addEventListener('resize',()=>{if($('bagov').classList.contains('show'))fitInv()});
 function invEquipBag(i,slotId){const g=H.bag[i];if(!g)return;
   if(slotId&&!slotsFor(g).includes(slotId))return;
   H.bag.splice(i,1);const ok=equip(g,true,slotId);if(!ok){}SFX.pick();invSel={from:'slot',slot:slotId||Object.keys(H.eq).find(k=>H.eq[k]===g)||(H.weapon===g?'weapon':H.shield===g?'shield':null)};
